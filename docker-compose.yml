@@ -23,18 +23,28 @@ services:
       retries: 3
       start_period: 40s
 
-  # Future: Backend API Service
-  # api:
-  #   build:
-  #     context: ./apps/api
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "4000:4000"
-  #   environment:
-  #     - NODE_ENV=production
-  #     - DATABASE_URL=${DATABASE_URL}
-  #   depends_on:
-  #     - db
+  # Backend API Service - NestJS API Gateway
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - AI_SERVICE_URL=http://ai:5000
+    depends_on:
+      ai:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # AI Backend Service - LLM Analysis & STT Proxy
   ai:

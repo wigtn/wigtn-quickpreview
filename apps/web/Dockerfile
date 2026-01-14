@@ -31,6 +31,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install Python for yt-dlp (STT audio download)
+RUN apk add --no-cache python3 ffmpeg
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 

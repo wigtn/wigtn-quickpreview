@@ -219,7 +219,7 @@ export async function fetchTranscript(
   logger.info("YouTube 자막 추출 시도 (영어 우선)");
   const youtubeResult = await fetchYouTubeTranscript(videoId);
 
-  if (youtubeResult) {
+  if (youtubeResult && youtubeResult.segments.length > 0) {
     logger.info("YouTube 자막 성공", {
       length: youtubeResult.transcript.length,
       segmentsCount: youtubeResult.segments.length,
@@ -239,7 +239,7 @@ export async function fetchTranscript(
       },
     };
   }
-  logger.info("YouTube 자막 없음");
+  logger.info("YouTube 자막 없음 또는 파싱 실패");
 
   // 2. STT fallback (영상 길이 제한 확인)
   const withinLimit = isWithinSTTLimit(duration);

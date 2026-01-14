@@ -25,11 +25,12 @@ async def health_check(request: Request) -> HealthResponse:
     openai_ok = bool(settings.openai_api_key)
     stt_api_ok = False
 
-    # Check STT API availability
+    # Check STT API availability (server reachable = ok)
     try:
         async with httpx.AsyncClient(timeout=settings.timeout_health) as client:
-            response = await client.get(f"{settings.stt_api_url}/health")
-            stt_api_ok = response.status_code == 200
+            response = await client.get(f"{settings.stt_api_url}/")
+            # Any response means server is reachable (even 404)
+            stt_api_ok = response.status_code < 500
     except Exception as e:
         logger.warning(
             "stt_health_check_failed",
