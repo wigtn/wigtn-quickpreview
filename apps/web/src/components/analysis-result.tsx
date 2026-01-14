@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { VideoAnalysis } from "@/types/analysis";
+import { YTPlayer } from "@/types/youtube";
 import { formatDuration, formatViewCount } from "@/lib/youtube";
 import { useVideoSync } from "@/hooks/use-video-sync";
 import { ScriptPanel } from "@/components/script-panel";
@@ -17,40 +18,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-
-// YouTube Player types
-declare global {
-  interface Window {
-    YT: {
-      Player: new (
-        elementId: string,
-        options: {
-          videoId: string;
-          playerVars?: {
-            autoplay?: number;
-            start?: number;
-            rel?: number;
-            modestbranding?: number;
-          };
-          events?: {
-            onReady?: () => void;
-            onStateChange?: (event: { data: number }) => void;
-          };
-        }
-      ) => YTPlayer;
-    };
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
-
-interface YTPlayer {
-  getCurrentTime: () => number;
-  getPlayerState: () => number;
-  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
-  playVideo: () => void;
-  pauseVideo: () => void;
-  destroy: () => void;
-}
 
 interface AnalysisResultProps {
   analysis: VideoAnalysis;

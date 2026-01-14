@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { UrlInput } from "@/components/url-input";
-import { AnalysisView } from "@/components/analysis-view";
 import { LoadingState } from "@/components/loading-state";
 import { VideoAnalysis, AnalyzeResponse } from "@/types/analysis";
 import { sampleVideos } from "@/mocks/sample-videos";
+import { analysisStore } from "@/store/analysis-store";
 import { RotateCcw, AlertCircle, Zap, TestTube } from "lucide-react";
 
 async function analyzeVideo(url: string): Promise<VideoAnalysis> {
@@ -26,43 +27,32 @@ async function analyzeVideo(url: string): Promise<VideoAnalysis> {
 }
 
 export default function Home() {
-  const [result, setResult] = useState<VideoAnalysis | null>(null);
+  const router = useRouter();
   const [showTestMenu, setShowTestMenu] = useState(false);
 
   const mutation = useMutation({
     mutationFn: analyzeVideo,
     onSuccess: (data) => {
-      setResult(data);
+      // store에 저장 후 라우트 이동
+      analysisStore.set(data);
+      router.push(`/analyze/${data.videoId}`);
     },
   });
 
   const handleAnalyze = (url: string) => {
-    setResult(null);
     mutation.mutate(url);
   };
 
   const handleReset = () => {
-    setResult(null);
     mutation.reset();
   };
 
   const handleTrySample = (video: VideoAnalysis) => {
-    setResult(video);
+    // store에 저장 후 라우트 이동
+    analysisStore.set(video);
+    router.push(`/analyze/${video.videoId}`);
     setShowTestMenu(false);
   };
-
-  // 분석 결과가 있을 때: 전체 화면 분석 뷰
-  if (result) {
-    return (
-      <AnalysisView
-      key={result.videoId}
-        analysis={result}
-        onReset={handleReset}
-        onNewAnalyze={handleAnalyze}
-        isLoading={mutation.isPending}
-      />
-    );
-  }
 
   // 로딩 중
   if (mutation.isPending) {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useId } from "react";
 import { VideoAnalysis } from "@/types/analysis";
+import { YTPlayer } from "@/types/youtube";
 import { formatDuration, formatViewCount } from "@/lib/youtube";
 import { useVideoSync } from "@/hooks/use-video-sync";
 import { ScriptPanel } from "@/components/script-panel";
@@ -14,42 +15,6 @@ import {
   ThumbsUp,
   AlertCircle,
 } from "lucide-react";
-
-// YouTube Player types
-declare global {
-  interface Window {
-    YT: {
-      Player: new (
-        elementId: string,
-        options: {
-          videoId: string;
-          width?: string | number;
-          height?: string | number;
-          playerVars?: {
-            autoplay?: number;
-            start?: number;
-            rel?: number;
-            modestbranding?: number;
-          };
-          events?: {
-            onReady?: () => void;
-            onStateChange?: (event: { data: number }) => void;
-          };
-        }
-      ) => YTPlayer;
-    };
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
-
-interface YTPlayer {
-  getCurrentTime: () => number;
-  getPlayerState: () => number;
-  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
-  playVideo: () => void;
-  pauseVideo: () => void;
-  destroy: () => void;
-}
 
 interface AnalysisViewProps {
   analysis: VideoAnalysis;
@@ -67,7 +32,9 @@ export function AnalysisView({
   const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
-  const playerId = `youtube-player-${analysis.videoId}`;
+  // React useId로 고유한 ID 생성 (컴포넌트 인스턴스마다 다름)
+  const uniqueId = useId();
+  const playerId = `yt-player-${uniqueId.replace(/:/g, "")}`;
 
   const {
     activeSegmentIndex,
@@ -81,17 +48,23 @@ export function AnalysisView({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const currentPlayerId = playerId;
+    let player: YTPlayer | null = null;
+
     const loadPlayer = () => {
       if (!containerRef.current) return;
 
-      let playerDiv = document.getElementById(playerId);
-      if (!playerDiv) {
-        playerDiv = document.createElement("div");
-        playerDiv.id = playerId;
-        containerRef.current.appendChild(playerDiv);
+      // 기존 플레이어 div 제거 후 새로 생성
+      const existingDiv = document.getElementById(currentPlayerId);
+      if (existingDiv) {
+        existingDiv.remove();
       }
 
-      const player = new window.YT.Player(playerId, {
+      const playerDiv = document.createElement("div");
+      playerDiv.id = currentPlayerId;
+      containerRef.current.appendChild(playerDiv);
+
+      player = new window.YT.Player(currentPlayerId, {
         videoId: analysis.videoId,
         width: "100%",
         height: "100%",
@@ -122,13 +95,24 @@ export function AnalysisView({
     }
 
     return () => {
+      // 플레이어 정리
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          playerRef.current.destroy();
+        } catch {
+          // 이미 파괴된 경우 무시
+        }
         playerRef.current = null;
       }
+      // useVideoSync의 player도 정리
+      setPlayer(null);
+      // DOM 요소 제거
+      const playerDiv = document.getElementById(currentPlayerId);
+      if (playerDiv) {
+        playerDiv.remove();
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analysis.videoId]); // setPlayer 제거 - player 재생성 방지
+  }, [analysis.videoId, playerId, setPlayer]);
 
   const handleSegmentClick = useCallback(
     (seconds: number) => {

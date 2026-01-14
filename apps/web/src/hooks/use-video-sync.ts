@@ -2,25 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { TranscriptSegment } from "@/types/analysis";
-
-/** YouTube Player 인터페이스 */
-interface YTPlayer {
-  getCurrentTime: () => number;
-  getPlayerState: () => number;
-  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
-  playVideo: () => void;
-  pauseVideo: () => void;
-}
-
-/** YouTube Player 상태 */
-const YT_PLAYER_STATE = {
-  UNSTARTED: -1,
-  ENDED: 0,
-  PLAYING: 1,
-  PAUSED: 2,
-  BUFFERING: 3,
-  CUED: 5,
-};
+import { YTPlayer, YT_PLAYER_STATE } from "@/types/youtube";
 
 interface UseVideoSyncOptions {
   /** 동기화 간격 (ms) */
