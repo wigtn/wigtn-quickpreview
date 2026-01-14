@@ -5,11 +5,11 @@ from unittest.mock import patch, MagicMock
 
 
 class TestAnalyzeEndpoint:
-    """Tests for /analyze endpoint"""
+    """Tests for /api/v1/analyze endpoint"""
 
     def test_analyze_success(self, client, mock_openai, sample_analyze_request):
         """Test analyze returns valid response"""
-        response = client.post("/analyze", json=sample_analyze_request)
+        response = client.post("/api/v1/analyze", json=sample_analyze_request)
 
         assert response.status_code == 200
         data = response.json()
@@ -27,7 +27,7 @@ class TestAnalyzeEndpoint:
                 "channelName": "테스트 채널"
             }
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 200
         data = response.json()
@@ -40,7 +40,7 @@ class TestAnalyzeEndpoint:
                 "channelName": "테스트 채널"
             }
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 422  # Pydantic validation error
 
@@ -51,7 +51,7 @@ class TestAnalyzeEndpoint:
                 "title": "테스트 제목"
             }
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 422
 
@@ -63,7 +63,7 @@ class TestAnalyzeEndpoint:
                 "channelName": "테스트 채널"
             }
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 422
 
@@ -76,13 +76,13 @@ class TestAnalyzeEndpoint:
             },
             "transcript": "가" * 60000  # Over 50000 character limit
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 422
 
     def test_analyze_has_request_id(self, client, mock_openai, sample_analyze_request):
         """Test analyze returns X-Request-ID header"""
-        response = client.post("/analyze", json=sample_analyze_request)
+        response = client.post("/api/v1/analyze", json=sample_analyze_request)
         assert "X-Request-ID" in response.headers
 
     def test_analyze_error_response_format(self, client):
@@ -93,7 +93,7 @@ class TestAnalyzeEndpoint:
                 "channelName": "테스트"
             }
         }
-        response = client.post("/analyze", json=request)
+        response = client.post("/api/v1/analyze", json=request)
 
         assert response.status_code == 422
         data = response.json()

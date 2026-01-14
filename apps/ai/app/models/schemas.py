@@ -143,6 +143,65 @@ class STTRequest(BaseModel):
     language: str = "auto"
 
 
+# === Translation ===
+
+class TranslationSegment(BaseModel):
+    """Segment for translation"""
+    start: float = Field(..., ge=0)
+    end: float = Field(..., ge=0)
+    text: str = Field(..., min_length=1)
+
+
+class TranslatedSegment(BaseModel):
+    """Translated segment"""
+    start: float
+    end: float
+    original_text: str = Field(alias="originalText")
+    translated_text: str = Field(alias="translatedText")
+
+    class Config:
+        populate_by_name = True
+
+
+class TranslateRequest(BaseModel):
+    """Request for /translate endpoint"""
+    segments: list[TranslationSegment] = Field(..., min_length=1)
+    source_language: str = Field(default="en", alias="sourceLanguage")
+    target_language: str = Field(default="ko", alias="targetLanguage")
+
+    class Config:
+        populate_by_name = True
+
+    @field_validator("segments")
+    @classmethod
+    def validate_segments(cls, v: list[TranslationSegment]) -> list[TranslationSegment]:
+        settings = get_settings()
+        if len(v) > settings.max_segments_count:
+            raise ValueError(f"세그먼트는 {settings.max_segments_count}개 이내여야 합니다")
+        return v
+
+
+class TranslationMeta(BaseModel):
+    """Translation metadata"""
+    translated_count: int = Field(alias="translatedCount")
+    processing_time: float = Field(alias="processingTime")
+
+    class Config:
+        populate_by_name = True
+
+
+class TranslationData(BaseModel):
+    """Translation result data"""
+    segments: list[TranslatedSegment]
+
+
+class TranslateResponse(BaseModel):
+    """Response for /translate endpoint"""
+    success: bool = True
+    data: TranslationData
+    meta: TranslationMeta
+
+
 # === Health ===
 
 class ServiceStatus(BaseModel):

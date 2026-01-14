@@ -2,11 +2,16 @@
 
 from fastapi import APIRouter
 
-from . import health, analyze, stt
+from . import health, analyze, stt, translate
 
 router = APIRouter()
 
-# Include all routers
+# Health check (root level)
 router.include_router(health.router, tags=["health"])
-router.include_router(analyze.router, tags=["analyze"])
+
+# STT endpoints (root level for backward compatibility)
 router.include_router(stt.router, tags=["stt"])
+
+# API v1 endpoints
+router.include_router(analyze.router, prefix="/api/v1", tags=["analyze"])
+router.include_router(translate.router, prefix="/api/v1", tags=["translate"])
