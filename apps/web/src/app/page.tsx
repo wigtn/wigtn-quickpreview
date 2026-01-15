@@ -21,6 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FlaskConical,
+  Link as LinkIcon,
+  CheckCircle,
 } from "lucide-react";
 
 const TOTAL_SLIDES = 3;
@@ -57,9 +59,24 @@ const features = [
 ];
 
 const steps = [
-  { number: "1", title: "URL 붙여넣기", description: "YouTube 영상 링크 입력" },
-  { number: "2", title: "AI 분석", description: "자막 추출 및 내용 분석" },
-  { number: "3", title: "결과 확인", description: "요약, 핵심장면, 키워드" },
+  {
+    number: "1",
+    icon: LinkIcon,
+    title: "URL 붙여넣기",
+    description: "YouTube 영상 링크를 입력하면 자동으로 분석이 시작됩니다",
+  },
+  {
+    number: "2",
+    icon: Sparkles,
+    title: "AI 분석",
+    description: "오디오를 추출하고 한국어로 번역을 진행합니다",
+  },
+  {
+    number: "3",
+    icon: CheckCircle,
+    title: "결과 확인",
+    description: "원문·번역 스크립트, 주제별 구간 분리, AI 요약을 한눈에 확인하세요",
+  },
 ];
 
 async function analyzeVideo(url: string): Promise<VideoAnalysis> {
@@ -288,36 +305,57 @@ export default function Home() {
           {/* Slide 0: Steps Clone (마지막 복제 - 무한루프용) */}
           <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
             <div className="max-w-4xl mx-auto w-full">
-              <div className="text-center mb-6 md:mb-12">
+              <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
-                  사용 방법
+                  시작은 간단해요
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  3단계로 간단하게
+                  URL 하나면 충분합니다
                 </p>
               </div>
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
-                {steps.map((step, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center md:items-start gap-3 md:gap-4"
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-foreground text-background flex items-center justify-center font-bold text-xl md:text-3xl mb-2 md:mb-4 transition-transform hover:scale-110">
-                        {step.number}
+
+              {/* 타임라인 컨테이너 */}
+              <div className="relative">
+                {/* 세로 연결선 */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2 hidden md:block" />
+
+                <div className="flex flex-col gap-8 md:gap-12">
+                  {steps.map((step, index) => {
+                    const Icon = step.icon;
+                    const isEven = index % 2 === 0;
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-4 md:gap-8 ${
+                          isEven ? "md:flex-row" : "md:flex-row-reverse"
+                        }`}
+                      >
+                        {/* 콘텐츠 */}
+                        <div
+                          className={`flex-1 ${isEven ? "md:text-right" : "md:text-left"}`}
+                        >
+                          <h3 className="font-semibold text-lg md:text-xl mb-1">
+                            {step.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {step.description}
+                          </p>
+                        </div>
+
+                        {/* 중앙 아이콘 */}
+                        <div className="relative z-10 w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent flex items-center justify-center shrink-0 shadow-lg shadow-accent/30">
+                          <Icon className="w-6 h-6 md:w-7 md:h-7 text-accent-foreground" />
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
+                            {step.number}
+                          </span>
+                        </div>
+
+                        {/* 빈 공간 (정렬용) */}
+                        <div className="flex-1 hidden md:block" />
                       </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">
-                        {step.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground max-w-32 md:max-w-37.5">
-                        {step.description}
-                      </p>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <ArrowRight className="hidden md:block w-6 h-6 text-muted-foreground shrink-0 mt-7" />
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
@@ -951,37 +989,57 @@ export default function Home() {
           {/* Slide 3: Steps */}
           <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
             <div className="max-w-4xl mx-auto w-full">
-              <div className="text-center mb-6 md:mb-12">
+              <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
-                  사용 방법
+                  시작은 간단해요
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  3단계로 간단하게
+                  URL 하나면 충분합니다
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
-                {steps.map((step, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center md:items-start gap-3 md:gap-4"
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-foreground text-background flex items-center justify-center font-bold text-xl md:text-3xl mb-2 md:mb-4 transition-transform hover:scale-110">
-                        {step.number}
+              {/* 타임라인 컨테이너 */}
+              <div className="relative">
+                {/* 세로 연결선 */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2 hidden md:block" />
+
+                <div className="flex flex-col gap-8 md:gap-12">
+                  {steps.map((step, index) => {
+                    const Icon = step.icon;
+                    const isEven = index % 2 === 0;
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-4 md:gap-8 ${
+                          isEven ? "md:flex-row" : "md:flex-row-reverse"
+                        }`}
+                      >
+                        {/* 콘텐츠 */}
+                        <div
+                          className={`flex-1 ${isEven ? "md:text-right" : "md:text-left"}`}
+                        >
+                          <h3 className="font-semibold text-lg md:text-xl mb-1">
+                            {step.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {step.description}
+                          </p>
+                        </div>
+
+                        {/* 중앙 아이콘 */}
+                        <div className="relative z-10 w-14 h-14 md:w-16 md:h-16 rounded-full bg-accent flex items-center justify-center shrink-0 shadow-lg shadow-accent/30">
+                          <Icon className="w-6 h-6 md:w-7 md:h-7 text-accent-foreground" />
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
+                            {step.number}
+                          </span>
+                        </div>
+
+                        {/* 빈 공간 (정렬용) */}
+                        <div className="flex-1 hidden md:block" />
                       </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">
-                        {step.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground max-w-32 md:max-w-37.5">
-                        {step.description}
-                      </p>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <ArrowRight className="hidden md:block w-6 h-6 text-muted-foreground shrink-0 mt-7" />
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
@@ -1028,7 +1086,7 @@ export default function Home() {
         </div>
 
         {/* 고정 CTA 버튼 */}
-        <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-40">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
           <button
             onClick={scrollToInput}
             className="btn-primary px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base shadow-lg shadow-black/30 hover:shadow-xl hover:shadow-black/40 transition-all"
@@ -1067,7 +1125,7 @@ export default function Home() {
         </button>
 
         {/* 하단 인디케이터 */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2">
           {Array.from({ length: TOTAL_SLIDES }).map((_, index) => (
             <button
               key={index}
