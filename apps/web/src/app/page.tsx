@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { UrlInput } from "@/components/url-input";
 import { LoadingState } from "@/components/loading-state";
+import { HeroSection } from "@/components/hero-section";
 import { VideoAnalysis, AnalyzeResponse } from "@/types/analysis";
 import { analysisStore } from "@/store/analysis-store";
 import {
@@ -191,16 +192,17 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide]);
 
-  // 자동 슬라이드 (4초마다, 단방향 무한 루프)
+  // 자동 슬라이드 (Hero는 10초, 나머지는 4초)
   useEffect(() => {
     if (isTransitioning) return;
 
-    const timer = setInterval(() => {
+    const delay = currentSlide === 0 ? 10000 : 4000;
+    const timer = setTimeout(() => {
       nextSlide();
-    }, 4000);
+    }, delay);
 
-    return () => clearInterval(timer);
-  }, [isTransitioning, nextSlide]);
+    return () => clearTimeout(timer);
+  }, [isTransitioning, nextSlide, currentSlide]);
 
   // URL 입력 섹션으로 스크롤
   const scrollToInput = useCallback(() => {
@@ -279,14 +281,14 @@ export default function Home() {
             <span className="font-bold text-lg">WIGTN</span>
           </div>
           {/* 테스트 버튼 (개발용) */}
-          <button
+          {/* <button
             onClick={() => setTestLoading(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-accent transition-colors"
             title="로딩 테스트"
           >
             <FlaskConical className="w-4 h-4" />
             <span className="hidden sm:inline">로딩 테스트</span>
-          </button>
+          </button> */}
         </div>
       </header>
 
@@ -1045,44 +1047,7 @@ export default function Home() {
           </section>
 
           {/* Slide 4: Hero Clone (첫번째 복제 - 무한루프용) */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
-            <div className="max-w-3xl mx-auto w-full">
-              <div className="text-center mb-4 md:mb-6">
-                <h1 className="text-2xl md:text-4xl font-bold mb-2">
-                  YouTube 영상, 빠르게 파악하세요
-                </h1>
-                <p className="text-muted-foreground text-sm md:text-lg">
-                  URL 하나로 AI가 핵심 내용을 분석해드립니다
-                </p>
-              </div>
-              {/* 모바일/데스크탑 공용 간단 일러스트 */}
-              <div className="flex flex-col items-center gap-4 py-8">
-                <div className="w-full max-w-xs bg-card border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-3 h-3 rounded-full bg-destructive/50" />
-                    <div className="w-3 h-3 rounded-full bg-warning/50" />
-                    <div className="w-3 h-3 rounded-full bg-success/50" />
-                  </div>
-                  <div className="bg-muted rounded-full px-4 py-2 text-sm text-muted-foreground flex items-center gap-2">
-                    <span className="truncate">youtube.com/watch?v=...</span>
-                    <div className="w-1.5 h-4 bg-accent animate-pulse rounded-sm" />
-                  </div>
-                </div>
-                <ArrowRight className="w-5 h-5 text-accent rotate-90" />
-                <div className="flex gap-2">
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
-                    AI 요약
-                  </div>
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
-                    핵심장면
-                  </div>
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
-                    키워드
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <HeroSection />
         </div>
 
         {/* 고정 CTA 버튼 */}
