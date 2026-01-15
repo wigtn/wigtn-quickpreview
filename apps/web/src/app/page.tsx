@@ -98,7 +98,6 @@ async function analyzeVideo(url: string): Promise<VideoAnalysis> {
 
 export default function Home() {
   const router = useRouter();
-  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [testLoading, setTestLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -944,22 +943,10 @@ export default function Home() {
                   return (
                     <div
                       key={index}
-                      onMouseEnter={() => setHoveredFeature(index)}
-                      onMouseLeave={() => setHoveredFeature(null)}
-                      className={`bento-card p-3 md:p-6 cursor-default transition-all duration-200 ${
-                        hoveredFeature === index
-                          ? "border-accent/50 bg-accent/5 scale-[1.02] shadow-lg shadow-accent/10"
-                          : ""
-                      }`}
+                      className="bento-card p-3 md:p-6"
                     >
                       <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-4 text-center md:text-left">
-                        <div
-                          className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
-                            hoveredFeature === index
-                              ? "bg-accent text-background scale-110"
-                              : "bg-accent/10 text-accent"
-                          }`}
-                        >
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 bg-accent/10 text-accent">
                           <Icon className="w-5 h-5 md:w-6 md:h-6" />
                         </div>
                         <div>
@@ -1051,7 +1038,7 @@ export default function Home() {
         </div>
 
         {/* 고정 CTA 버튼 */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40">
           <button
             onClick={scrollToInput}
             className="btn-primary px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base shadow-lg shadow-black/30 hover:shadow-xl hover:shadow-black/40 transition-all"
@@ -1090,7 +1077,7 @@ export default function Home() {
         </button>
 
         {/* 하단 인디케이터 */}
-        <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute bottom-24 md:bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-2">
           {Array.from({ length: TOTAL_SLIDES }).map((_, index) => (
             <button
               key={index}
@@ -1120,12 +1107,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="bento-card p-4 md:p-6 transition-all hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5">
-            <UrlInput
-              onAnalyze={handleAnalyze}
-              isLoading={mutation.isPending}
-            />
-          </div>
+          <UrlInput
+            onAnalyze={handleAnalyze}
+            isLoading={mutation.isPending}
+          />
         </div>
       </section>
 
