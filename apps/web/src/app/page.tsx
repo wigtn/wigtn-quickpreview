@@ -83,59 +83,85 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [testLoading, setTestLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isFading, setIsFading] = useState(false);
+  const [enableTransition, setEnableTransition] = useState(true);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // 페이드 전환 캐러셀: [0] [1] [2]
-  const scrollToIndex = useCallback((index: number) => {
-    carouselRef.current?.scrollTo({
-      left: index * window.innerWidth,
-      behavior: "instant",
-    });
-  }, []);
-
-  // 페이드 전환 헬퍼
-  const FADE_DURATION = 300; // 페이드 시간 (ms)
-
-  const fadeToSlide = useCallback(
-    (targetSlide: number) => {
-      if (isTransitioning) return;
-      if (targetSlide === currentSlide) return;
-
-      setIsTransitioning(true);
-      setIsFading(true);
-
-      setTimeout(() => {
-        scrollToIndex(targetSlide);
-        setCurrentSlide(targetSlide);
-
-        requestAnimationFrame(() => {
-          setIsFading(false);
-          setTimeout(() => {
-            setIsTransitioning(false);
-          }, FADE_DURATION);
-        });
-      }, FADE_DURATION);
-    },
-    [currentSlide, isTransitioning, scrollToIndex]
-  );
+  // Transform 기반 무한 캐러셀
+  // 슬라이드 구조: [마지막복제(-1), 0, 1, 2, 첫번째복제(3)]
+  // 실제 위치: translateIndex 1이 slide 0
+  const SLIDE_DURATION = 500;
+  const [translateIndex, setTranslateIndex] = useState(1); // 시작: 실제 slide 0 위치
 
   const goToSlide = useCallback(
     (index: number) => {
-      fadeToSlide(index);
+      if (isTransitioning) return;
+      setIsTransitioning(true);
+      setEnableTransition(true);
+      setCurrentSlide(index);
+      setTranslateIndex(index + 1); // +1 because of prepended clone
+
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, SLIDE_DURATION);
     },
-    [fadeToSlide]
+    [isTransitioning]
   );
 
   const nextSlide = useCallback(() => {
-    const next = currentSlide === TOTAL_SLIDES - 1 ? 0 : currentSlide + 1;
-    fadeToSlide(next);
-  }, [currentSlide, fadeToSlide]);
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setEnableTransition(true);
+
+    const nextTranslateIndex = translateIndex + 1;
+    setTranslateIndex(nextTranslateIndex);
+
+    // 다음 실제 슬라이드 계산
+    const nextRealSlide = (currentSlide + 1) % TOTAL_SLIDES;
+    setCurrentSlide(nextRealSlide);
+
+    // 복제본(index 4)에 도달하면 즉시 실제 첫 번째(index 1)로 점프
+    if (nextTranslateIndex === TOTAL_SLIDES + 1) {
+      setTimeout(() => {
+        setEnableTransition(false);
+        setTranslateIndex(1);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, SLIDE_DURATION);
+    } else {
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, SLIDE_DURATION);
+    }
+  }, [currentSlide, isTransitioning, translateIndex]);
 
   const prevSlide = useCallback(() => {
-    const prev = currentSlide === 0 ? TOTAL_SLIDES - 1 : currentSlide - 1;
-    fadeToSlide(prev);
-  }, [currentSlide, fadeToSlide]);
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setEnableTransition(true);
+
+    const prevTranslateIndex = translateIndex - 1;
+    setTranslateIndex(prevTranslateIndex);
+
+    // 이전 실제 슬라이드 계산
+    const prevRealSlide = (currentSlide - 1 + TOTAL_SLIDES) % TOTAL_SLIDES;
+    setCurrentSlide(prevRealSlide);
+
+    // 복제본(index 0)에 도달하면 즉시 실제 마지막(index 3)으로 점프
+    if (prevTranslateIndex === 0) {
+      setTimeout(() => {
+        setEnableTransition(false);
+        setTranslateIndex(TOTAL_SLIDES);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, SLIDE_DURATION);
+    } else {
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, SLIDE_DURATION);
+    }
+  }, [currentSlide, isTransitioning, translateIndex]);
 
   // 키보드 네비게이션
   useEffect(() => {
@@ -147,13 +173,13 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide]);
 
-  // 자동 슬라이드 (2초마다, 무한 루프)
+  // 자동 슬라이드 (4초마다, 단방향 무한 루프)
   useEffect(() => {
     if (isTransitioning) return;
 
     const timer = setInterval(() => {
       nextSlide();
-    }, 2000);
+    }, 4000);
 
     return () => clearInterval(timer);
   }, [isTransitioning, nextSlide]);
@@ -220,7 +246,13 @@ export default function Home() {
 
   // 초기 상태: 랜딩 페이지 (가로 캐러셀 + 스크롤 URL 입력)
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
+    <div
+      className="flex-1 flex flex-col overflow-y-auto"
+      style={{
+        background:
+          "linear-gradient(to bottom, var(--background) 0%, #2a2a2a 50%, #3a3a3a 100%)",
+      }}
+    >
       {/* Header - 고정 */}
       <header className="fixed top-0 left-0 right-0 shrink-0 px-6 py-4 bg-background/80 backdrop-blur-sm border-b border-border z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -244,14 +276,50 @@ export default function Home() {
       <div className="h-screen w-full shrink-0 relative pt-16 overflow-hidden">
         <div
           ref={carouselRef}
-          className={`h-full flex overflow-x-hidden transition-opacity duration-200 ${
-            isFading ? "opacity-0" : "opacity-100"
-          }`}
+          className="h-full flex"
           style={{
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
+            transform: `translateX(-${translateIndex * 100}vw)`,
+            transition: enableTransition
+              ? `transform ${SLIDE_DURATION}ms ease-in-out`
+              : "none",
           }}
         >
+          {/* Slide 0: Steps Clone (마지막 복제 - 무한루프용) */}
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
+            <div className="max-w-4xl mx-auto w-full">
+              <div className="text-center mb-6 md:mb-12">
+                <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
+                  사용 방법
+                </h2>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  3단계로 간단하게
+                </p>
+              </div>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+                {steps.map((step, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center md:items-start gap-3 md:gap-4"
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-foreground text-background flex items-center justify-center font-bold text-xl md:text-3xl mb-2 md:mb-4 transition-transform hover:scale-110">
+                        {step.number}
+                      </div>
+                      <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">
+                        {step.title}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground max-w-32 md:max-w-37.5">
+                        {step.description}
+                      </p>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <ArrowRight className="hidden md:block w-6 h-6 text-muted-foreground shrink-0 mt-7" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
           {/* Slide 1: Hero */}
           <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
             <div className="max-w-3xl mx-auto w-full">
@@ -818,7 +886,7 @@ export default function Home() {
           </section>
 
           {/* Slide 2: Features */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 bg-background -mt-16">
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
             <div className="max-w-5xl mx-auto w-full">
               <div className="text-center mb-4 md:mb-8">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
@@ -916,6 +984,46 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {/* Slide 4: Hero Clone (첫번째 복제 - 무한루프용) */}
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
+            <div className="max-w-3xl mx-auto w-full">
+              <div className="text-center mb-4 md:mb-6">
+                <h1 className="text-2xl md:text-4xl font-bold mb-2">
+                  YouTube 영상, 빠르게 파악하세요
+                </h1>
+                <p className="text-muted-foreground text-sm md:text-lg">
+                  URL 하나로 AI가 핵심 내용을 분석해드립니다
+                </p>
+              </div>
+              {/* 모바일/데스크탑 공용 간단 일러스트 */}
+              <div className="flex flex-col items-center gap-4 py-8">
+                <div className="w-full max-w-xs bg-card border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-destructive/50" />
+                    <div className="w-3 h-3 rounded-full bg-warning/50" />
+                    <div className="w-3 h-3 rounded-full bg-success/50" />
+                  </div>
+                  <div className="bg-muted rounded-full px-4 py-2 text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="truncate">youtube.com/watch?v=...</span>
+                    <div className="w-1.5 h-4 bg-accent animate-pulse rounded-sm" />
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-accent rotate-90" />
+                <div className="flex gap-2">
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    AI 요약
+                  </div>
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    핵심장면
+                  </div>
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    키워드
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* 고정 CTA 버튼 */}
@@ -962,7 +1070,7 @@ export default function Home() {
       {/* URL 입력 섹션 - 스크롤 */}
       <section
         id="url-input-section"
-        className="min-h-screen flex items-center px-4 md:px-6 py-12 bg-(--background-elevated)"
+        className="min-h-screen flex items-center px-4 md:px-6 py-12"
       >
         <div className="max-w-2xl mx-auto w-full space-y-6 md:space-y-8">
           <div className="text-center space-y-2 md:space-y-3">
