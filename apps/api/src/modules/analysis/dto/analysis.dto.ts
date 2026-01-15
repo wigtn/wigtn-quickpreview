@@ -25,6 +25,14 @@ export class AnalyzeSegmentDto {
 
   @IsString()
   text!: string;
+
+  @IsOptional()
+  @IsString()
+  originalText?: string;
+
+  @IsOptional()
+  @IsString()
+  translatedText?: string;
 }
 
 export class AnalyzeDirectDto {
@@ -92,6 +100,11 @@ export interface TranscriptSegmentWithTranslation {
   translatedText: string;
 }
 
+export interface AnalysisWarning {
+  code: string;
+  message: string;
+}
+
 export interface AnalysisResult {
   id: string;
   videoId: string;
@@ -109,6 +122,7 @@ export interface AnalysisResult {
   isKorean: boolean;
   isTranslated: boolean;
   analyzedAt: string;
+  warnings?: AnalysisWarning[];
 }
 
 export interface AnalysisResponse {

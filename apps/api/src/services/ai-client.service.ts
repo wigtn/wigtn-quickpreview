@@ -1,7 +1,6 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { AudioDownloadService } from './audio-download.service';
 
 // Types for AI Service
 export interface TranslationSegment {
@@ -105,11 +104,7 @@ export class AiClientService {
   private readonly recoveryTimeout: number;
   private readonly halfOpenRequests: number;
 
-  constructor(
-    private configService: ConfigService,
-    @Inject(forwardRef(() => AudioDownloadService))
-    private audioDownloadService: AudioDownloadService,
-  ) {
+  constructor(private configService: ConfigService) {
     const aiConfig = this.configService.get('ai');
     const circuitConfig = this.configService.get('circuitBreaker');
 
@@ -138,6 +133,7 @@ export class AiClientService {
       const response = await this.client.post<TranslationResponse>(
         '/api/v1/translate',
         request,
+        { timeout: 300000 }, // 5 minutes for long transcripts
       );
 
       this.onSuccess();
@@ -158,6 +154,7 @@ export class AiClientService {
       const response = await this.client.post<AnalysisResponse>(
         '/api/v1/analyze',
         request,
+        { timeout: 120000 }, // 2 minutes for AI analysis
       );
 
       this.onSuccess();
@@ -305,6 +302,7 @@ export class AiClientService {
 
   /**
    * Download audio from YouTube video and transcribe using STT
+   * Uses AI service's /stt/video endpoint which handles download via yt-dlp
    * @param videoId YouTube video ID
    * @param language Language hint for STT
    * @returns STT response with transcription
@@ -321,28 +319,41 @@ export class AiClientService {
     try {
       this.logger.log(`Starting STT from video: ${videoId}`);
 
-      // Step 1: Download audio from YouTube
-      const audioResult = await this.audioDownloadService.downloadAudio(videoId);
-
-      if (!audioResult) {
-        this.logger.warn(`Audio download failed for video: ${videoId}`);
-        return null;
-      }
-
-      this.logger.log(
-        `Audio downloaded: ${(audioResult.buffer.length / 1024 / 1024).toFixed(2)}MB, duration: ${audioResult.duration}s`,
+      // Call AI service's /stt/video endpoint
+      // This endpoint downloads audio using yt-dlp and transcribes
+      const response = await this.client.post<{
+        text: string;
+        language: string;
+        language_probability: number;
+        segments: Array<{ start: number; end: number; text: string }>;
+      }>(
+        `/stt/video/${videoId}`,
+        null,
+        {
+          timeout: 600000, // 10 minutes for download + STT
+          params: { language },
+          headers: {
+            'X-Internal-API-Key': this.internalApiKey,
+          },
+        },
       );
 
-      // Step 2: Send audio to STT service
-      const sttResult = await this.transcribe(audioResult.buffer, language);
+      this.onSuccess();
 
-      if (sttResult) {
-        this.logger.log(
-          `STT completed for ${videoId}: ${sttResult.data.segments.length} segments`,
-        );
-      }
+      this.logger.log(
+        `STT completed for ${videoId}: ${response.data.segments.length} segments`,
+      );
 
-      return sttResult;
+      // Transform response to SttResponse format
+      return {
+        success: true,
+        data: {
+          text: response.data.text,
+          language: response.data.language,
+          languageProbability: response.data.language_probability,
+          segments: response.data.segments,
+        },
+      };
     } catch (error) {
       this.logger.error(
         `STT from video failed for ${videoId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
