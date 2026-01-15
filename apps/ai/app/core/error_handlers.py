@@ -2,6 +2,7 @@
 
 import structlog
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError as PydanticValidationError
 from slowapi.errors import RateLimitExceeded
@@ -40,6 +41,57 @@ def setup_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content=exc.to_dict()
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_error_handler(
+        request: Request,
+        exc: RequestValidationError
+    ) -> JSONResponse:
+        """Handle FastAPI request validation errors (422)"""
+        request_id = getattr(request.state, "request_id", "unknown")
+
+        # Convert errors to JSON-serializable format
+        errors = []
+        for err in exc.errors():
+            error_dict = {
+                "loc": list(err.get("loc", [])),
+                "msg": str(err.get("msg", "")),
+                "type": str(err.get("type", "")),
+            }
+            # Include input if it's serializable
+            if "input" in err:
+                try:
+                    import json
+                    json.dumps(err["input"])
+                    error_dict["input"] = err["input"]
+                except (TypeError, ValueError):
+                    error_dict["input"] = str(err["input"])[:100]
+            errors.append(error_dict)
+
+        first_error = errors[0] if errors else {}
+        field = ".".join(str(loc) for loc in first_error.get("loc", []))
+
+        # Log the validation error details
+        logger.error(
+            "request_validation_error",
+            request_id=request_id,
+            field=field,
+            error_type=first_error.get("type"),
+            error_msg=first_error.get("msg"),
+            errors=errors
+        )
+
+        return JSONResponse(
+            status_code=422,
+            content={
+                "success": False,
+                "error": {
+                    "code": ErrorCode.INVALID_REQUEST.value,
+                    "message": f"요청 검증 실패: {field} - {first_error.get('msg', '')}",
+                    "details": {"validation_errors": errors}
+                }
+            }
         )
 
     @app.exception_handler(PydanticValidationError)

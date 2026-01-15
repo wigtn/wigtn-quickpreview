@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Validation limits
     max_title_length: int = 200
     max_channel_length: int = 100
-    max_description_length: int = 2000
+    max_description_length: int = 10000  # YouTube allows up to 5000, but some have more
     max_transcript_length: int = 50000
     max_segments_count: int = 1000
 
