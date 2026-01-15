@@ -54,28 +54,96 @@ class LLMService:
         if not segments or len(segments) == 0 or len(highlights) == 0:
             return highlights
 
-        validated = []
-        for h in highlights:
-            timestamp = h.get("timestamp", 0)
+        # 영상 길이 계산 (마지막 세그먼트의 end 값 기준)
+        video_duration = segments[-1].end
+        first_segment_start = segments[0].start
 
-            # 가장 가까운 실제 세그먼트 타임스탬프 찾기
+        logger.info(
+            "timestamp_validation_start",
+            video_duration=video_duration,
+            first_segment_start=first_segment_start,
+            last_segment_end=video_duration,
+            segments_count=len(segments),
+            highlights_count=len(highlights),
+            raw_timestamps=[h.get("timestamp") for h in highlights]
+        )
+
+        validated = []
+        for idx, h in enumerate(highlights):
+            timestamp = h.get("timestamp", 0)
+            original_timestamp = timestamp
+            correction_reason = None
+
+            # 1. 영상 길이 초과 검증
+            if timestamp > video_duration:
+                correction_reason = "exceeds_duration"
+                logger.warning(
+                    "timestamp_exceeds_duration",
+                    highlight_index=idx,
+                    timestamp=timestamp,
+                    video_duration=video_duration,
+                    excess_seconds=timestamp - video_duration,
+                    title=h.get("title")
+                )
+                # 마지막 세그먼트의 시작 시간으로 보정
+                timestamp = int(segments[-1].start)
+
+            # 2. 음수 또는 첫 세그먼트 이전 검증
+            elif timestamp < first_segment_start:
+                correction_reason = "before_first_segment"
+                logger.warning(
+                    "timestamp_before_start",
+                    highlight_index=idx,
+                    timestamp=timestamp,
+                    first_segment_start=first_segment_start,
+                    title=h.get("title")
+                )
+                timestamp = int(first_segment_start)
+
+            # 3. 가장 가까운 실제 세그먼트 타임스탬프 찾기
             closest = min(segments, key=lambda seg: abs(seg.start - timestamp))
 
             # 10초 이상 차이나면 가장 가까운 타임스탬프로 보정
             if abs(closest.start - timestamp) > 10:
+                if not correction_reason:
+                    correction_reason = "segment_mismatch"
                 corrected_timestamp = int(closest.start)
                 logger.info(
                     "timestamp_corrected",
-                    original=timestamp,
-                    corrected=corrected_timestamp
+                    highlight_index=idx,
+                    original=original_timestamp,
+                    after_bounds_check=timestamp,
+                    corrected=corrected_timestamp,
+                    closest_segment_start=closest.start,
+                    reason=correction_reason
                 )
             else:
                 corrected_timestamp = timestamp
+                if correction_reason:
+                    logger.info(
+                        "timestamp_corrected",
+                        highlight_index=idx,
+                        original=original_timestamp,
+                        corrected=corrected_timestamp,
+                        reason=correction_reason
+                    )
 
             validated.append({
                 **h,
                 "timestamp": corrected_timestamp
             })
+
+        # 검증 완료 로그
+        logger.info(
+            "timestamp_validation_complete",
+            video_duration=video_duration,
+            original_timestamps=[h.get("timestamp") for h in highlights],
+            validated_timestamps=[h.get("timestamp") for h in validated],
+            corrections_made=sum(
+                1 for orig, val in zip(highlights, validated)
+                if orig.get("timestamp") != val.get("timestamp")
+            )
+        )
 
         return validated
 
