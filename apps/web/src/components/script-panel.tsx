@@ -72,7 +72,7 @@ export function ScriptPanel({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 표시 모드 토글 - 한/영, 원문만, 번역본만 */}
+          {/* 표시 모드 토글 - 원본/번역, 원문만, 번역본만 */}
           {hasTranslation && !isKorean && (
             <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
               <button
@@ -83,9 +83,9 @@ export function ScriptPanel({
                     ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 )}
-                title="한/영 동시 표시"
+                title="원본/번역 동시 표시"
               >
-                한/영
+                원본/번역
               </button>
               <button
                 onClick={() => setDisplayMode("original")}

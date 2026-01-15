@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const MESSAGES = [
-  "AI가 분석 중입니다...",
+  "AI가 분석 중입니다",
   "영상 내용을 파악하고 있어요",
   "핵심 장면을 찾고 있습니다",
   "키워드를 추출하는 중이에요",
@@ -14,27 +14,42 @@ const ALMOST_DONE_MESSAGE = "거의 다 됐어요!";
 const THREE_MINUTES = 180; // 3분 = 180초
 
 export function LoadingState() {
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(() =>
+    Math.floor(Math.random() * MESSAGES.length)
+  );
   const [elapsedTime, setElapsedTime] = useState(0);
-
-  // 메시지 로테이션 (3분 전에만)
-  useEffect(() => {
-    if (elapsedTime >= THREE_MINUTES) return;
-
-    const interval = setInterval(() => {
-      setMessageIndex((prev: number) => (prev + 1) % MESSAGES.length);
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [elapsedTime]);
+  const [isFading, setIsFading] = useState(false);
+  const elapsedTimeRef = useRef(0);
 
   // 경과 시간 타이머
   useEffect(() => {
     const timer = setInterval(() => {
-      setElapsedTime((prev: number) => prev + 1);
+      elapsedTimeRef.current += 1;
+      setElapsedTime(elapsedTimeRef.current);
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // 메시지 로테이션 (3분 전에만, 페이드 애니메이션 포함)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (elapsedTimeRef.current >= THREE_MINUTES) return;
+
+      setIsFading(true);
+      setTimeout(() => {
+        setMessageIndex((prev) => {
+          let newIndex;
+          do {
+            newIndex = Math.floor(Math.random() * MESSAGES.length);
+          } while (newIndex === prev && MESSAGES.length > 1);
+          return newIndex;
+        });
+        setIsFading(false);
+      }, 300);
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // 시간 포맷 (mm:ss)
@@ -207,12 +222,20 @@ export function LoadingState() {
         </g>
       </svg>
 
-      {/* Rotating Message */}
-      <p className="text-lg font-medium text-foreground mb-3">
-        {elapsedTime >= THREE_MINUTES
-          ? ALMOST_DONE_MESSAGE
-          : MESSAGES[messageIndex]}
-      </p>
+      {/* Rotating Message with fade animation */}
+      <div className="h-8 mb-3 flex items-center justify-center">
+        <p
+          className={`text-lg font-medium text-foreground transition-opacity duration-300 ${
+            isFading ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {elapsedTime >= THREE_MINUTES
+            ? ALMOST_DONE_MESSAGE
+            : MESSAGES[messageIndex]}
+          {/* Animated dots */}
+          {elapsedTime < THREE_MINUTES && <AnimatedDots />}
+        </p>
+      </div>
 
       {/* 경과 시간 타이머 */}
       <p className="text-sm text-muted-foreground">
@@ -220,5 +243,24 @@ export function LoadingState() {
         <span className="font-mono text-accent">{formatTime(elapsedTime)}</span>
       </p>
     </div>
+  );
+}
+
+// 점 애니메이션 컴포넌트
+function AnimatedDots() {
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((prev) => (prev + 1) % 4);
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="inline-block w-6 text-left">
+      {".".repeat(dotCount)}
+    </span>
   );
 }

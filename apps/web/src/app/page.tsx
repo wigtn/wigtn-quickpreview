@@ -38,7 +38,7 @@ const features = [
   {
     icon: Languages,
     title: "실시간 자막",
-    description: "영상과 동기화된 자막을 한/영 동시에 확인할 수 있습니다",
+    description: "영상과 동기화된 자막을 원본/번역 동시에 확인할 수 있습니다",
   },
   {
     icon: Hash,
@@ -221,14 +221,14 @@ export default function Home() {
             <span className="font-bold text-lg">WIGTN</span>
           </div>
           {/* 테스트 버튼 (개발용) */}
-          {/* <button
+          <button
             onClick={() => setTestLoading(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-md hover:border-accent transition-colors"
             title="로딩 테스트"
           >
             <FlaskConical className="w-4 h-4" />
             <span className="hidden sm:inline">로딩 테스트</span>
-          </button> */}
+          </button>
         </div>
       </header>
 
