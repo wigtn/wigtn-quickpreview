@@ -5,7 +5,7 @@
 
 import { getEnvConfig } from "@/lib/config/env";
 import { createLogger } from "@/lib/logger";
-import { STTSegment } from "@/lib/stt";
+import { STTSegment } from "@/lib/services/transcript";
 
 const logger = createLogger("AIAnalysis");
 
@@ -47,17 +47,10 @@ export async function analyzeWithAI(
 ): Promise<AnalysisResult> {
   const config = getEnvConfig();
 
-  // API_URL (NestJS Gateway) 우선, 없으면 AI_SERVICE_URL 직접 호출
-  const baseUrl = config.API_URL || config.AI_SERVICE_URL;
-  if (!baseUrl) {
-    throw new Error("API_URL or AI_SERVICE_URL is not configured");
-  }
-
   logger.debug("AI 분석 요청", {
     title: metadata.title.slice(0, 50),
     hasTranscript: !!transcript,
     segmentsCount: segments?.length || 0,
-    via: config.API_URL ? "NestJS Gateway" : "AI Service Direct",
   });
 
   const requestBody = {
@@ -70,7 +63,7 @@ export async function analyzeWithAI(
     segments: segments || undefined,
   };
 
-  const response = await fetch(`${baseUrl}/api/v1/analyze`, {
+  const response = await fetch(`${config.API_URL}/api/v1/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
