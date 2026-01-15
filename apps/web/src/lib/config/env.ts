@@ -10,8 +10,6 @@ const logger = createLogger("Env");
 interface EnvConfig {
   /** NestJS API Gateway URL (Required) */
   API_URL: string;
-  /** @deprecated use API_URL instead - AI 서버 직접 호출용 (fallback) */
-  AI_SERVICE_URL: string;
   STT_MAX_DURATION_MINUTES: number;
 }
 
@@ -30,13 +28,8 @@ function validateRequiredEnv(key: string): string {
  * 환경변수 검증 및 기본값 설정
  */
 export function getEnvConfig(): EnvConfig {
-  // API_URL: NestJS API Gateway (필수)
-  // AI_SERVICE_URL: AI 서버 직접 호출 (deprecated, fallback용)
-  const aiServiceUrl = process.env.AI_SERVICE_URL || "";
-
   return {
     API_URL: validateRequiredEnv("API_URL"),
-    AI_SERVICE_URL: aiServiceUrl,
     STT_MAX_DURATION_MINUTES: parseInt(
       process.env.STT_MAX_DURATION_MINUTES ||
         STT.DEFAULT_MAX_DURATION_MINUTES.toString()
