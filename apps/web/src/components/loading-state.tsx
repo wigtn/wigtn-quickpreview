@@ -8,21 +8,25 @@ const MESSAGES = [
   "핵심 장면을 찾고 있습니다",
   "키워드를 추출하는 중이에요",
   "자막을 분석하고 있습니다",
-  "거의 다 됐어요!",
 ];
+
+const ALMOST_DONE_MESSAGE = "거의 다 됐어요!";
+const THREE_MINUTES = 180; // 3분 = 180초
 
 export function LoadingState() {
   const [messageIndex, setMessageIndex] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // 메시지 로테이션
+  // 메시지 로테이션 (3분 전에만)
   useEffect(() => {
+    if (elapsedTime >= THREE_MINUTES) return;
+
     const interval = setInterval(() => {
       setMessageIndex((prev: number) => (prev + 1) % MESSAGES.length);
     }, 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [elapsedTime]);
 
   // 경과 시간 타이머
   useEffect(() => {
@@ -108,9 +112,30 @@ export function LoadingState() {
         </defs>
 
         {/* 배경 펄스 링 */}
-        <circle className="ring1" cx="100" cy="100" r="70" fill="var(--accent)" opacity="0.3" />
-        <circle className="ring2" cx="100" cy="100" r="55" fill="var(--accent)" opacity="0.4" />
-        <circle className="ring3" cx="100" cy="100" r="40" fill="var(--accent)" opacity="0.5" />
+        <circle
+          className="ring1"
+          cx="100"
+          cy="100"
+          r="70"
+          fill="var(--accent)"
+          opacity="0.3"
+        />
+        <circle
+          className="ring2"
+          cx="100"
+          cy="100"
+          r="55"
+          fill="var(--accent)"
+          opacity="0.4"
+        />
+        <circle
+          className="ring3"
+          cx="100"
+          cy="100"
+          r="40"
+          fill="var(--accent)"
+          opacity="0.5"
+        />
 
         {/* 회전하는 대시 링 */}
         <g className="rotating-ring">
@@ -129,22 +154,70 @@ export function LoadingState() {
 
         {/* 중앙 오디오 파형 바 */}
         <g transform="translate(100, 100)">
-          <rect className="bar1" x="-30" y="-20" width="6" height="20" rx="3" fill="var(--foreground)" style={{ transformOrigin: 'center bottom' }} />
-          <rect className="bar2" x="-18" y="-30" width="6" height="30" rx="3" fill="var(--foreground)" style={{ transformOrigin: 'center bottom' }} />
-          <rect className="bar3" x="-6" y="-25" width="6" height="25" rx="3" fill="var(--foreground)" style={{ transformOrigin: 'center bottom' }} />
-          <rect className="bar4" x="6" y="-35" width="6" height="35" rx="3" fill="var(--foreground)" style={{ transformOrigin: 'center bottom' }} />
-          <rect className="bar5" x="18" y="-22" width="6" height="22" rx="3" fill="var(--foreground)" style={{ transformOrigin: 'center bottom' }} />
+          <rect
+            className="bar1"
+            x="-30"
+            y="-20"
+            width="6"
+            height="20"
+            rx="3"
+            fill="var(--foreground)"
+            style={{ transformOrigin: "center bottom" }}
+          />
+          <rect
+            className="bar2"
+            x="-18"
+            y="-30"
+            width="6"
+            height="30"
+            rx="3"
+            fill="var(--foreground)"
+            style={{ transformOrigin: "center bottom" }}
+          />
+          <rect
+            className="bar3"
+            x="-6"
+            y="-25"
+            width="6"
+            height="25"
+            rx="3"
+            fill="var(--foreground)"
+            style={{ transformOrigin: "center bottom" }}
+          />
+          <rect
+            className="bar4"
+            x="6"
+            y="-35"
+            width="6"
+            height="35"
+            rx="3"
+            fill="var(--foreground)"
+            style={{ transformOrigin: "center bottom" }}
+          />
+          <rect
+            className="bar5"
+            x="18"
+            y="-22"
+            width="6"
+            height="22"
+            rx="3"
+            fill="var(--foreground)"
+            style={{ transformOrigin: "center bottom" }}
+          />
         </g>
       </svg>
 
       {/* Rotating Message */}
       <p className="text-lg font-medium text-foreground mb-3">
-        {MESSAGES[messageIndex]}
+        {elapsedTime >= THREE_MINUTES
+          ? ALMOST_DONE_MESSAGE
+          : MESSAGES[messageIndex]}
       </p>
 
       {/* 경과 시간 타이머 */}
       <p className="text-sm text-muted-foreground">
-        경과 시간: <span className="font-mono text-accent">{formatTime(elapsedTime)}</span>
+        경과 시간:{" "}
+        <span className="font-mono text-accent">{formatTime(elapsedTime)}</span>
       </p>
     </div>
   );

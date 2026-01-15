@@ -78,43 +78,46 @@ export default function Home() {
   const [isFading, setIsFading] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // 무한 캐러셀: 실제 슬라이드 + 앞뒤 클론
-  // [클론-마지막] [0] [1] [2] [클론-첫번째]
-  // 인덱스:  0      1   2   3      4
-
-  const scrollToIndex = useCallback((index: number, smooth = true) => {
+  // 페이드 전환 캐러셀: [0] [1] [2]
+  const scrollToIndex = useCallback((index: number) => {
     carouselRef.current?.scrollTo({
       left: index * window.innerWidth,
-      behavior: smooth ? "smooth" : "instant",
+      behavior: "instant",
     });
   }, []);
 
   // 페이드 전환 헬퍼
   const FADE_DURATION = 300; // 페이드 시간 (ms)
 
-  const fadeToSlide = useCallback((targetSlide: number) => {
-    if (isTransitioning) return;
-    if (targetSlide === currentSlide) return;
+  const fadeToSlide = useCallback(
+    (targetSlide: number) => {
+      if (isTransitioning) return;
+      if (targetSlide === currentSlide) return;
 
-    setIsTransitioning(true);
-    setIsFading(true);
+      setIsTransitioning(true);
+      setIsFading(true);
 
-    setTimeout(() => {
-      scrollToIndex(targetSlide + 1, false); // 클론 오프셋
-      setCurrentSlide(targetSlide);
+      setTimeout(() => {
+        scrollToIndex(targetSlide);
+        setCurrentSlide(targetSlide);
 
-      requestAnimationFrame(() => {
-        setIsFading(false);
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, FADE_DURATION);
-      });
-    }, FADE_DURATION);
-  }, [currentSlide, isTransitioning, scrollToIndex]);
+        requestAnimationFrame(() => {
+          setIsFading(false);
+          setTimeout(() => {
+            setIsTransitioning(false);
+          }, FADE_DURATION);
+        });
+      }, FADE_DURATION);
+    },
+    [currentSlide, isTransitioning, scrollToIndex]
+  );
 
-  const goToSlide = useCallback((index: number) => {
-    fadeToSlide(index);
-  }, [fadeToSlide]);
+  const goToSlide = useCallback(
+    (index: number) => {
+      fadeToSlide(index);
+    },
+    [fadeToSlide]
+  );
 
   const nextSlide = useCallback(() => {
     const next = currentSlide === TOTAL_SLIDES - 1 ? 0 : currentSlide + 1;
@@ -126,11 +129,6 @@ export default function Home() {
     fadeToSlide(prev);
   }, [currentSlide, fadeToSlide]);
 
-  // 초기 위치 설정 (클론 오프셋)
-  useEffect(() => {
-    scrollToIndex(1, false);
-  }, [scrollToIndex]);
-
   // 키보드 네비게이션
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -141,13 +139,13 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide]);
 
-  // 자동 슬라이드 (5초마다, 무한 루프)
+  // 자동 슬라이드 (10초마다, 무한 루프)
   useEffect(() => {
     if (isTransitioning) return;
 
     const timer = setInterval(() => {
       nextSlide();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(timer);
   }, [isTransitioning, nextSlide]);
@@ -235,7 +233,7 @@ export default function Home() {
       </header>
 
       {/* 캐러셀 컨테이너 */}
-      <div className="h-screen shrink-0 relative pt-16">
+      <div className="h-screen w-full shrink-0 relative pt-16 overflow-hidden">
         <div
           ref={carouselRef}
           className={`h-full flex overflow-x-hidden transition-opacity duration-200 ${
@@ -246,42 +244,9 @@ export default function Home() {
             msOverflowStyle: "none",
           }}
         >
-          {/* Clone: Slide 3 (Steps) - 앞쪽 클론 */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
-            <div className="max-w-4xl mx-auto w-full">
-              <div className="text-center mb-6 md:mb-12">
-                <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
-                  사용 방법
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground">3단계로 간단하게</p>
-              </div>
-
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
-                {steps.map((step, index) => (
-                  <div key={index} className="flex items-center md:items-start gap-3 md:gap-4">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-foreground text-background flex items-center justify-center font-bold text-xl md:text-3xl mb-2 md:mb-4 transition-transform hover:scale-110">
-                        {step.number}
-                      </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">
-                        {step.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground max-w-32 md:max-w-37.5">
-                        {step.description}
-                      </p>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <ArrowRight className="hidden md:block w-6 h-6 text-muted-foreground shrink-0 mt-7" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
           {/* Slide 1: Hero */}
           <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
-            <div className="max-w-4xl mx-auto w-full">
+            <div className="max-w-3xl mx-auto w-full">
               {/* 타이틀 */}
               <div className="text-center mb-4 md:mb-6">
                 <h1 className="text-2xl md:text-4xl font-bold mb-2">
@@ -830,12 +795,17 @@ export default function Home() {
                 </div>
                 <ArrowRight className="w-5 h-5 text-accent rotate-90" />
                 <div className="flex gap-2">
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">AI 요약</div>
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">핵심장면</div>
-                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">키워드</div>
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    AI 요약
+                  </div>
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    핵심장면
+                  </div>
+                  <div className="bg-accent/20 text-accent text-xs px-3 py-1 rounded-full">
+                    키워드
+                  </div>
                 </div>
               </div>
-
             </div>
           </section>
 
@@ -888,7 +858,6 @@ export default function Home() {
                   );
                 })}
               </div>
-
             </div>
           </section>
 
@@ -899,12 +868,17 @@ export default function Home() {
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
                   사용 방법
                 </h2>
-                <p className="text-sm md:text-base text-muted-foreground">3단계로 간단하게</p>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  3단계로 간단하게
+                </p>
               </div>
 
               <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
                 {steps.map((step, index) => (
-                  <div key={index} className="flex items-center md:items-start gap-3 md:gap-4">
+                  <div
+                    key={index}
+                    className="flex items-center md:items-start gap-3 md:gap-4"
+                  >
                     <div className="flex flex-col items-center text-center">
                       <div className="w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl bg-foreground text-background flex items-center justify-center font-bold text-xl md:text-3xl mb-2 md:mb-4 transition-transform hover:scale-110">
                         {step.number}
@@ -921,28 +895,6 @@ export default function Home() {
                     )}
                   </div>
                 ))}
-              </div>
-
-            </div>
-          </section>
-
-          {/* Clone: Slide 1 (Hero) - 뒤쪽 클론 */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
-            <div className="max-w-4xl mx-auto w-full">
-              <div className="text-center mb-4 md:mb-6">
-                <h1 className="text-2xl md:text-4xl font-bold mb-2">
-                  YouTube 영상, 빠르게 파악하세요
-                </h1>
-                <p className="text-muted-foreground text-sm md:text-lg">
-                  URL 하나로 AI가 핵심 내용을 분석해드립니다
-                </p>
-              </div>
-              {/* 간단한 플레이스홀더 */}
-              <div className="w-full max-w-3xl h-48 md:h-64 mx-auto bg-card rounded-lg border border-border flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <Zap className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-accent" />
-                  <p className="text-sm md:text-base">AI 분석 서비스</p>
-                </div>
               </div>
             </div>
           </section>
@@ -1015,17 +967,17 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-background/80 text-gray-300">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-            {/* 회사 정보 */}
-            <div className="space-y-4">
+        {/* <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-4"> */}
+        {/* 회사 정보 */}
+        {/* <div className="space-y-4">
               <h1 className="text-lg font-bold text-white">WIGTN</h1>
-              {/* <h5>(KOCCA Speaking Test)</h5> */}
+              
               <p className="text-sm">Youtube 영상 AI 분석 서비스</p>
-            </div>
+            </div> */}
 
-            {/* 링크 */}
-            <div>
+        {/* 링크 */}
+        {/* <div>
               <h4 className="mb-4 font-semibold text-white">서비스</h4>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -1044,10 +996,10 @@ export default function Home() {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
 
-            {/* 회사 */}
-            <div>
+        {/* 회사 */}
+        {/* <div>
               <h4 className="mb-4 font-semibold text-white">회사</h4>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -1066,10 +1018,10 @@ export default function Home() {
                   </a>
                 </li>
               </ul>
-            </div>
+            </div> */}
 
-            {/* 소셜 미디어 */}
-            <div>
+        {/* 소셜 미디어 */}
+        {/* <div>
               <h4 className="mb-4 font-semibold text-white">팔로우</h4>
               <div className="flex space-x-4">
                 <a href="#" className="transition hover:text-white">
@@ -1101,13 +1053,13 @@ export default function Home() {
                 </a>
               </div>
             </div>
-          </div>
+          </div> */}
 
-          {/* 하단 저작권 */}
-          <div className="mt-8 border-t border-gray-800 pt-8 text-center text-sm">
-            <p>&copy; 2025 SoundMind. All rights reserved.</p>
-          </div>
+        {/* 하단 저작권 */}
+        <div className="mt-8 border-t border-gray-800 pt-8 text-center text-sm">
+          <p>&copy; 2026 WIGTN. All rights reserved.</p>
         </div>
+        {/* </div> */}
       </footer>
     </div>
   );
