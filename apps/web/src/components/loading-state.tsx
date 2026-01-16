@@ -114,7 +114,7 @@ const Icons = {
 
 const STEP_LABELS: Record<AnalysisStep, string> = {
   metadata: "영상 정보",
-  transcript: "자막 추출",
+  transcript: "음성 추출",
   translation: "번역",
   analysis: "AI 분석",
   complete: "완료",
