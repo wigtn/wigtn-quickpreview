@@ -1,6 +1,6 @@
 <div align="center">
 
-# QuickPreview
+# WIGTN Player - WIGPL !
 
 YouTube 영상의 자막을 추출하고 한국어로 번역하여 실시간으로 동기화된 스크립트를 제공하는 서비스입니다.
 
