@@ -251,7 +251,7 @@ export default function Home() {
           }}
         >
           {/* Slide 0: Steps Clone (마지막 복제 - 무한루프용) */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-12 md:px-24 -mt-16">
             <div className="max-w-4xl mx-auto w-full">
               <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
@@ -313,7 +313,7 @@ export default function Home() {
           <HeroSection />
 
           {/* Slide 2: Features */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-12 md:px-24 -mt-16">
             <div className="max-w-5xl mx-auto w-full">
               <div className="text-center mb-4 md:mb-8">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
@@ -360,7 +360,7 @@ export default function Home() {
           </section>
 
           {/* Slide 3: Steps */}
-          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6 -mt-16">
+          <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-14 md:px-24 -mt-16">
             <div className="max-w-4xl mx-auto w-full">
               <div className="text-center mb-8 md:mb-12">
                 <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">
@@ -440,8 +440,8 @@ export default function Home() {
           className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 p-2 hover:scale-110 transition-all"
         >
           <ChevronLeft
-            className="w-8 h-8 md:w-10 md:h-10 text-white/80 hover:text-white"
-            strokeWidth={3}
+            className="w-6 h-6 md:w-8 md:h-8 text-white/80 hover:text-white"
+            strokeWidth={2.5}
             style={{
               filter:
                 "drop-shadow(1px 1px 0px rgba(0,0,0,0.5)) drop-shadow(-1px -1px 0px rgba(255,255,255,0.2))",
@@ -453,8 +453,8 @@ export default function Home() {
           className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 p-2 hover:scale-110 transition-all"
         >
           <ChevronRight
-            className="w-8 h-8 md:w-10 md:h-10 text-white/80 hover:text-white"
-            strokeWidth={3}
+            className="w-6 h-6 md:w-8 md:h-8 text-white/80 hover:text-white"
+            strokeWidth={2.5}
             style={{
               filter:
                 "drop-shadow(1px 1px 0px rgba(0,0,0,0.5)) drop-shadow(-1px -1px 0px rgba(255,255,255,0.2))",

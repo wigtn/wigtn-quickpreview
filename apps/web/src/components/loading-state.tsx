@@ -6,38 +6,108 @@ import { StepState, AnalysisStep } from "@/hooks/use-analysis-stream";
 // SVG 아이콘 컴포넌트
 const Icons = {
   metadata: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+      />
     </svg>
   ),
   transcript: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+      />
     </svg>
   ),
   translation: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+      />
     </svg>
   ),
   analysis: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
+      />
     </svg>
   ),
   complete: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
   check: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 12.75l6 6 9-13.5"
+      />
     </svg>
   ),
   skip: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z" />
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062A1.125 1.125 0 013 16.81V8.688zM12.75 8.688c0-.864.933-1.405 1.683-.977l7.108 4.062a1.125 1.125 0 010 1.953l-7.108 4.062a1.125 1.125 0 01-1.683-.977V8.688z"
+      />
     </svg>
   ),
 };
@@ -88,7 +158,9 @@ export function LoadingState({ steps }: LoadingStateProps) {
   // 진행률 계산
   const getProgress = () => {
     if (!steps) return 0;
-    const doneSteps = steps.filter((s) => s.status === "done" || s.status === "skipped").length;
+    const doneSteps = steps.filter(
+      (s) => s.status === "done" || s.status === "skipped"
+    ).length;
     const totalSteps = steps.length - 1;
     return Math.round((doneSteps / totalSteps) * 100);
   };
@@ -107,16 +179,12 @@ export function LoadingState({ steps }: LoadingStateProps) {
           {/* 헤더 */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 mb-4 ring-1 ring-accent/20">
-              <div className="animate-spin-slow">
-                {Icons.analysis}
-              </div>
+              <div className="animate-spin-slow">{Icons.analysis}</div>
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-1">
               영상 분석 중{dots}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              잠시만 기다려주세요
-            </p>
+            <p className="text-sm text-muted-foreground">잠시만 기다려주세요</p>
           </div>
 
           {/* 프로그레스 바 */}
@@ -136,7 +204,7 @@ export function LoadingState({ steps }: LoadingStateProps) {
                   className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
                   style={{
                     width: `${getProgress()}%`,
-                    boxShadow: '0 0 20px var(--accent), 0 0 40px var(--accent)'
+                    boxShadow: "0 0 20px var(--accent), 0 0 40px var(--accent)",
                   }}
                 />
               </div>
@@ -151,13 +219,14 @@ export function LoadingState({ steps }: LoadingStateProps) {
                   key={step.step}
                   className={`
                     relative flex items-center gap-4 p-3 rounded-xl transition-all duration-300
-                    ${step.status === "active"
-                      ? "bg-accent/10 ring-1 ring-accent/30"
-                      : step.status === "done"
+                    ${
+                      step.status === "active"
+                        ? "bg-accent/10 ring-1 ring-accent/30"
+                        : step.status === "done"
                         ? "bg-emerald-500/5"
                         : step.status === "skipped"
-                          ? "bg-muted/30"
-                          : "bg-transparent"
+                        ? "bg-muted/30"
+                        : "bg-transparent"
                     }
                   `}
                 >
@@ -166,7 +235,11 @@ export function LoadingState({ steps }: LoadingStateProps) {
                     <div
                       className={`
                         absolute left-[1.625rem] top-[3.25rem] w-0.5 h-3 transition-colors duration-300
-                        ${step.status === "done" || step.status === "skipped" ? "bg-emerald-500/30" : "bg-border"}
+                        ${
+                          step.status === "done" || step.status === "skipped"
+                            ? "bg-emerald-500/30"
+                            : "bg-border"
+                        }
                       `}
                     />
                   )}
@@ -175,13 +248,14 @@ export function LoadingState({ steps }: LoadingStateProps) {
                   <div
                     className={`
                       relative flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
-                      ${step.status === "active"
-                        ? "bg-accent text-white shadow-lg shadow-accent/25"
-                        : step.status === "done"
+                      ${
+                        step.status === "active"
+                          ? "bg-accent text-white shadow-lg shadow-accent/25"
+                          : step.status === "done"
                           ? "bg-emerald-500/15 text-emerald-500"
                           : step.status === "skipped"
-                            ? "bg-muted text-muted-foreground"
-                            : "bg-muted/50 text-muted-foreground/50"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-muted/50 text-muted-foreground/50"
                       }
                     `}
                   >
@@ -190,9 +264,7 @@ export function LoadingState({ steps }: LoadingStateProps) {
                     ) : step.status === "skipped" ? (
                       Icons.skip
                     ) : step.status === "active" ? (
-                      <div className="animate-pulse">
-                        {Icons[step.step]}
-                      </div>
+                      <div className="animate-pulse">{Icons[step.step]}</div>
                     ) : (
                       Icons[step.step]
                     )}
@@ -204,13 +276,14 @@ export function LoadingState({ steps }: LoadingStateProps) {
                       <span
                         className={`
                           text-sm font-medium transition-colors duration-300
-                          ${step.status === "active"
-                            ? "text-accent"
-                            : step.status === "done"
+                          ${
+                            step.status === "active"
+                              ? "text-accent"
+                              : step.status === "done"
                               ? "text-emerald-500"
                               : step.status === "skipped"
-                                ? "text-muted-foreground"
-                                : "text-muted-foreground/50"
+                              ? "text-muted-foreground"
+                              : "text-muted-foreground/50"
                           }
                         `}
                       >
@@ -237,9 +310,18 @@ export function LoadingState({ steps }: LoadingStateProps) {
                   {/* 활성 표시 애니메이션 */}
                   {step.status === "active" && (
                     <div className="flex-shrink-0 flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce"
+                        style={{ animationDelay: "0ms" }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce"
+                        style={{ animationDelay: "150ms" }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce"
+                        style={{ animationDelay: "300ms" }}
+                      />
                     </div>
                   )}
                 </div>
@@ -251,8 +333,18 @@ export function LoadingState({ steps }: LoadingStateProps) {
         {/* 푸터 */}
         <div className="relative px-8 py-4 border-t border-border/50 bg-muted/20">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>경과 시간</span>
             <span className="font-mono font-medium text-foreground tabular-nums">

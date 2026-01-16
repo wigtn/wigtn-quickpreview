@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-4 md:px-6">
+    <section className="relative w-screen h-full shrink-0 flex flex-col items-center justify-center px-12 md:px-24 -mt-8">
       <div className="max-w-3xl mx-auto w-full">
         {/* 타이틀 */}
         <div className="text-center mb-4 md:mb-6">
