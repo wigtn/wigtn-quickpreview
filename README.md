@@ -1,77 +1,216 @@
 # QuickPreview
 
-YouTube 영상의 자막을 추출하고 한국어로 번역하여 실시간으로 동기화된 스크립트를 제공하는 서비스입니다.
+YouTube subtitle extraction, translation, and real-time synchronization service.
 
-## 프로젝트 구조
+![CI](https://github.com/wigtn/wigtn-quickpreview/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/wigtn/wigtn-quickpreview/actions/workflows/cd.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[한국어](./README.ko.md)
+
+---
+
+## Built with Claude Code Skills
+
+This project was rapidly developed using **[wigtn-plugins](https://github.com/wigtn/wigtn-plugins-with-claude-code)**, a Claude Code Skills plugin suite for fast, efficient development.
+
+The entire microservices architecture (Web, API, AI) was designed and implemented through an AI-assisted development workflow, demonstrating the power of Claude Code Skills for building production-ready applications.
+
+---
+
+## Features
+
+- **Subtitle Extraction** - Extract subtitles from YouTube captions or via WhisperX STT
+- **Auto Translation** - Translate English to Korean using OpenAI GPT-4o-mini
+- **AI Analysis** - Generate summaries, watch scores, keywords, and highlights
+- **Real-time Sync** - Synchronized script panel with video playback
+- **Floating Memo** - Take notes while watching videos
+
+---
+
+## Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Nginx     │────▶│    Web      │     │   OpenAI    │
+│  (SSL/TLS)  │     │  (Next.js)  │     │   GPT-4o    │
+└──────┬──────┘     └──────┬──────┘     └─────────────┘
+       │                   │                   ▲
+       │            ┌──────▼──────┐     ┌──────┴──────┐
+       └───────────▶│    API      │────▶│     AI      │
+                    │  (NestJS)   │     │  (FastAPI)  │
+                    │  Port 4000  │     │  Port 5000  │
+                    └─────────────┘     └──────┬──────┘
+                                               │
+                                        ┌──────▼──────┐
+                                        │  WhisperX   │
+                                        │  (STT API)  │
+                                        └─────────────┘
+```
+
+| Service | Tech Stack | Port | Role |
+|---------|------------|------|------|
+| Web | Next.js 16, React 19 | 3000 | Frontend UI |
+| API | NestJS 10, TypeScript | 4000 | API Gateway |
+| AI | FastAPI, Python 3.11 | 5000 | LLM Analysis, STT |
+
+---
+
+## Project Structure
 
 ```
 quickpreview/
 ├── apps/
 │   ├── web/              # Frontend (Next.js 16)
-│   ├── api/              # Backend API (예정)
-│   └── ai/               # AI Backend (예정)
+│   ├── api/              # Backend API Gateway (NestJS 10)
+│   └── ai/               # AI Backend (FastAPI)
 ├── docs/
-│   └── prd/              # PRD 문서
-├── docker-compose.yml    # 서비스 오케스트레이션
-└── .env.example          # 환경변수 예시
+│   ├── prd/              # Product Requirements Documents
+│   └── deployment/       # Deployment Guides
+├── nginx/                # Nginx Configuration
+├── scripts/              # GCP Deployment Scripts
+├── .github/workflows/    # CI/CD Pipelines
+├── docker-compose.yml    # Local Development
+├── docker-compose.hub.yml # Production Deployment
+└── .env.example          # Environment Variables Template
 ```
 
-## 주요 기능
+---
 
-- **자막 추출**: YouTube 자막 또는 STT(WhisperX)로 추출
-- **자동 번역**: OpenAI API를 통한 영어→한국어 번역
-- **실시간 동기화**: 영상 재생 시간과 자막 동기화
-- **스크립트 패널**: 원본/번역 토글, 자동 스크롤
+## Tech Stack
 
-## 시작하기
+**Frontend**
+- Next.js 16, React 19, TypeScript 5
+- Tailwind CSS 4, TanStack Query, Radix UI
 
-### 로컬 개발
+**Backend API**
+- NestJS 10, Express, TypeScript
+- ytdl-core, Circuit Breaker Pattern
+
+**AI Service**
+- FastAPI, Python 3.11
+- OpenAI API, WhisperX, yt-dlp
+
+**Infrastructure**
+- Docker, Nginx, Let's Encrypt
+- GitHub Actions, GCP Compute Engine
+
+---
+
+## Quick Start
+
+### Using Docker Compose (Recommended)
 
 ```bash
-# 1. 환경변수 설정
+# Clone repository
+git clone https://github.com/wigtn/wigtn-quickpreview.git
+cd wigtn-quickpreview
+
+# Configure environment
 cp .env.example .env
-# .env 파일에 API 키 입력
+# Edit .env with your API keys
 
-# 2. 의존성 설치
-cd apps/web
-npm install
-
-# 3. 개발 서버 실행
-npm run dev
-```
-
-### Docker 배포
-
-```bash
-# 1. 환경변수 설정
-cp .env.example .env
-
-# 2. 빌드 및 실행
+# Run all services
 docker-compose up -d
 
-# 3. 로그 확인
-docker-compose logs -f web
+# Access
+# Web: http://localhost:3000
+# API: http://localhost:4000/api/v1/health
+# AI:  http://localhost:5000/health
 ```
 
-## 환경변수
+### Running Services Individually
 
-| 변수 | 설명 | 필수 |
-|------|------|------|
-| `YOUTUBE_API_KEY` | YouTube Data API v3 키 | O |
-| `OPENAI_API_KEY` | OpenAI API 키 (번역/분석) | O |
-| `WHISPERX_API_URL` | WhisperX API 주소 (STT) | △ |
+```bash
+# Web (Terminal 1)
+cd apps/web
+npm install
+npm run dev
 
-## 기술 스택
+# API (Terminal 2)
+cd apps/api
+npm install
+npm run start:dev
 
-- **Frontend**: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4
-- **API**: OpenAI GPT-4o-mini, YouTube Data API v3
-- **STT**: WhisperX API
-- **배포**: Docker, Docker Compose
+# AI (Terminal 3)
+cd apps/ai
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 5000
+```
 
-## 문서
+---
 
-- [PRD 문서](./docs/prd/quickpreview-service.md)
+## Environment Variables
 
-## 라이선스
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API Key | Yes |
+| `INTERNAL_API_KEY` | Inter-service Authentication Key | Yes |
+| `YOUTUBE_API_KEY` | YouTube Data API v3 Key | Optional |
+| `STT_API_URL` | WhisperX STT Server URL | Optional |
+| `OPENAI_MODEL` | OpenAI Model (default: gpt-4o-mini) | No |
+| `MAX_VIDEO_DURATION_MINUTES` | Max video length for analysis | No |
+
+See [.env.example](./.env.example) for all available options.
+
+---
+
+## API Endpoints
+
+### API Gateway (Port 4000)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/health` | Health Check |
+| GET | `/api/v1/youtube/metadata/:videoId` | Get Video Metadata |
+| GET | `/api/v1/transcript/:videoId` | Get Transcript |
+| POST | `/api/v1/analysis` | Full Video Analysis |
+
+### AI Service (Port 5000)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health Check |
+| POST | `/api/v1/analyze` | LLM Analysis |
+| POST | `/api/v1/translate` | Translation |
+| POST | `/stt/video/:videoId` | Speech-to-Text |
+
+---
+
+## Deployment
+
+### Docker Hub Images
+
+Pre-built images are available on Docker Hub:
+
+```bash
+docker-compose -f docker-compose.hub.yml up -d
+```
+
+- `morirokim/wigtn-web:latest`
+- `morirokim/wigtn-api:latest`
+- `morirokim/wigtn-ai:latest`
+
+### GCP Deployment
+
+- [Quick Start Guide](./docs/deployment/QUICK_START.md)
+- [GCP Deployment Guide](./docs/deployment/GCP_DEPLOYMENT_GUIDE.md)
+- [SSL Setup Guide](./docs/deployment/SSL_SETUP_GUIDE.md)
+
+---
+
+## Documentation
+
+- [PRD - QuickPreview Service](./docs/prd/quickpreview-service.md)
+- [PRD - AI Service](./docs/prd/ai-service.md)
+- [PRD - Service Separation](./docs/prd/service-separation-refactoring.md)
+
+---
+
+## License
 
 MIT License
+
+Copyright (c) 2026 WIGTN Crew
