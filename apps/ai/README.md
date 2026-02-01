@@ -1,4 +1,4 @@
-# QuickPreview AI Service
+# WIGVU AI Service
 
 AI 백엔드 서비스 - LLM 기반 영상 분석 및 STT 프록시
 
@@ -188,10 +188,10 @@ pytest tests/test_analyze.py -v
 
 ```bash
 # 빌드
-docker build -t quickpreview-ai .
+docker build -t wigvu-ai .
 
 # 실행
-docker run -p 5000:5000 -e OPENAI_API_KEY=sk-... quickpreview-ai
+docker run -p 5000:5000 -e OPENAI_API_KEY=sk-... wigvu-ai
 ```
 
 ## docker-compose

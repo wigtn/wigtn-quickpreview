@@ -5,7 +5,7 @@
 set -e
 
 echo "=========================================="
-echo "QuickPreview GCE Setup Script"
+echo "WIGVU GCE Setup Script"
 echo "=========================================="
 
 # Update system
@@ -37,8 +37,8 @@ gcloud auth configure-docker
 
 # Create application directory
 echo "[6/6] Setting up application directory..."
-sudo mkdir -p /opt/quickpreview
-sudo chown $USER:$USER /opt/quickpreview
+sudo mkdir -p /opt/wigvu
+sudo chown $USER:$USER /opt/wigvu
 
 echo ""
 echo "=========================================="
@@ -47,8 +47,8 @@ echo "=========================================="
 echo ""
 echo "Next steps:"
 echo "1. Clone the repository:"
-echo "   cd /opt/quickpreview"
-echo "   git clone https://github.com/YOUR_USERNAME/wigtn-quickpreview.git ."
+echo "   cd /opt/wigvu"
+echo "   git clone https://github.com/YOUR_USERNAME/wigvu.git ."
 echo ""
 echo "2. Create .env file:"
 echo "   cp .env.example .env"

@@ -6,7 +6,7 @@ set -e
 
 # Configuration - Modify these values
 PROJECT_ID="${GCP_PROJECT_ID:-your-project-id}"
-INSTANCE_NAME="${GCE_INSTANCE:-quickpreview-vm}"
+INSTANCE_NAME="${GCE_INSTANCE:-wigvu-vm}"
 ZONE="${GCP_ZONE:-asia-northeast3-a}"  # Seoul region
 MACHINE_TYPE="e2-medium"  # 2 vCPU, 4GB RAM (adjust as needed)
 BOOT_DISK_SIZE="30GB"
@@ -41,17 +41,17 @@ gcloud compute firewall-rules create allow-https \
 
 gcloud compute firewall-rules create allow-app-ports \
     --allow tcp:3000,tcp:4000,tcp:5000 \
-    --target-tags quickpreview-server \
-    --description "Allow QuickPreview app ports" \
+    --target-tags wigvu-server \
+    --description "Allow WIGVU app ports" \
     2>/dev/null || echo "Firewall rule 'allow-app-ports' already exists"
 
 # Create static IP (optional)
 echo "[2/4] Creating static IP..."
-gcloud compute addresses create quickpreview-ip \
+gcloud compute addresses create wigvu-ip \
     --region ${ZONE%-*} \
-    2>/dev/null || echo "Static IP 'quickpreview-ip' already exists"
+    2>/dev/null || echo "Static IP 'wigvu-ip' already exists"
 
-STATIC_IP=$(gcloud compute addresses describe quickpreview-ip \
+STATIC_IP=$(gcloud compute addresses describe wigvu-ip \
     --region ${ZONE%-*} \
     --format='get(address)' 2>/dev/null || echo "")
 
@@ -64,7 +64,7 @@ gcloud compute instances create $INSTANCE_NAME \
     --boot-disk-type=pd-ssd \
     --image-family=$IMAGE_FAMILY \
     --image-project=$IMAGE_PROJECT \
-    --tags=http-server,https-server,quickpreview-server \
+    --tags=http-server,https-server,wigvu-server \
     --scopes=cloud-platform \
     ${STATIC_IP:+--address=$STATIC_IP}
 

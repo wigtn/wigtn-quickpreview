@@ -12,11 +12,7 @@ export function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-bold tracking-tight text-foreground">
-              wigtn
-            </span>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-lg font-medium tracking-tight text-muted-foreground">
-              QuickPreview
+              WIGVU
             </span>
           </Link>
 

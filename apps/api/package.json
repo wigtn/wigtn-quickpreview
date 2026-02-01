@@ -1,7 +1,7 @@
 {
-  "name": "@quickpreview/api",
+  "name": "@wigvu/api",
   "version": "0.1.0",
-  "description": "QuickPreview API Gateway",
+  "description": "WIGVU API Gateway",
   "private": true,
   "scripts": {
     "build": "nest build",
