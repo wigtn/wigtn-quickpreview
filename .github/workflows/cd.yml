@@ -208,6 +208,7 @@ jobs:
             --zone=${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --command="
+              echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin && \
               git config --global --add safe.directory /opt/wigvu && \
               cd /opt/wigvu && \
               git pull origin main && \
