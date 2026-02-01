@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Services to build (comma-separated: web,api,ai or all)'
+        description: 'Services to deploy (comma-separated: web,api,ai,nginx,infra or all)'
         required: false
         default: 'all'
         type: string
@@ -27,6 +27,8 @@ jobs:
       web: ${{ steps.changes.outputs.web }}
       api: ${{ steps.changes.outputs.api }}
       ai: ${{ steps.changes.outputs.ai }}
+      nginx: ${{ steps.changes.outputs.nginx }}
+      infra: ${{ steps.changes.outputs.infra }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,10 +45,14 @@ jobs:
               echo "web=true" >> $GITHUB_OUTPUT
               echo "api=true" >> $GITHUB_OUTPUT
               echo "ai=true" >> $GITHUB_OUTPUT
+              echo "nginx=true" >> $GITHUB_OUTPUT
+              echo "infra=true" >> $GITHUB_OUTPUT
             else
               echo "web=$([[ $SERVICES == *web* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
               echo "api=$([[ $SERVICES == *api* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
               echo "ai=$([[ $SERVICES == *ai* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+              echo "nginx=$([[ $SERVICES == *nginx* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+              echo "infra=$([[ $SERVICES == *infra* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
             fi
           else
             # Auto detect changes on push
@@ -56,6 +62,8 @@ jobs:
             echo "web=$([[ $CHANGED_FILES == *apps/web/* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
             echo "api=$([[ $CHANGED_FILES == *apps/api/* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
             echo "ai=$([[ $CHANGED_FILES == *apps/ai/* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+            echo "nginx=$([[ $CHANGED_FILES == *nginx/* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+            echo "infra=$([[ $CHANGED_FILES == *docker-compose* ]] && echo true || echo false)" >> $GITHUB_OUTPUT
           fi
 
   # Web 이미지 빌드 & GHCR 푸시
@@ -168,13 +176,13 @@ jobs:
     name: Deploy to GCE
     runs-on: ubuntu-latest
     needs: [detect-changes, build-web, build-api, build-ai]
-    # 빌드 job 중 하나라도 성공하거나 스킵된 경우 실행
+    # 빌드 job 중 하나라도 성공하거나 스킵된 경우, 또는 nginx/infra 변경 시 실행
     if: |
       always() &&
       (needs.build-web.result == 'success' || needs.build-web.result == 'skipped') &&
       (needs.build-api.result == 'success' || needs.build-api.result == 'skipped') &&
       (needs.build-ai.result == 'success' || needs.build-ai.result == 'skipped') &&
-      (needs.build-web.result == 'success' || needs.build-api.result == 'success' || needs.build-ai.result == 'success')
+      (needs.build-web.result == 'success' || needs.build-api.result == 'success' || needs.build-ai.result == 'success' || needs.detect-changes.outputs.nginx == 'true' || needs.detect-changes.outputs.infra == 'true')
     environment: production
 
     permissions:
@@ -208,6 +216,29 @@ jobs:
               docker system prune -f
             "
 
+      - name: Reload nginx gracefully (if config changed)
+        if: needs.detect-changes.outputs.nginx == 'true'
+        run: |
+          gcloud compute ssh ${{ env.GCE_INSTANCE }} \
+            --zone=${{ env.GCP_ZONE }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --command="
+              cd /opt/quickpreview && \
+              docker compose -f docker-compose.hub.yml exec -T nginx nginx -t && \
+              docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload
+            "
+
+      - name: Setup SSL auto-renewal cron (one-time)
+        run: |
+          gcloud compute ssh ${{ env.GCE_INSTANCE }} \
+            --zone=${{ env.GCP_ZONE }} \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --command="
+              # SSL 인증서 자동 갱신 cron job 설정 (이미 있으면 스킵)
+              CRON_CMD='0 3 * * * cd /opt/quickpreview && docker compose -f docker-compose.hub.yml run --rm certbot renew --quiet && docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload'
+              (crontab -l 2>/dev/null | grep -q 'certbot renew') || (crontab -l 2>/dev/null; echo \"\$CRON_CMD\") | crontab -
+            "
+
       - name: Health check
         run: |
           sleep 30
@@ -224,11 +255,13 @@ jobs:
         run: |
           echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Built | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Changed | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Web | ${{ needs.detect-changes.outputs.web }} | ${{ needs.build-web.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| API | ${{ needs.detect-changes.outputs.api }} | ${{ needs.build-api.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| AI | ${{ needs.detect-changes.outputs.ai }} | ${{ needs.build-ai.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nginx | ${{ needs.detect-changes.outputs.nginx }} | config-only |" >> $GITHUB_STEP_SUMMARY
+          echo "| Infra | ${{ needs.detect-changes.outputs.infra }} | config-only |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "### ✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
