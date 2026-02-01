@@ -1,11 +1,11 @@
 #!/bin/bash
-# SSL Certificate Renewal Script for QuickPreview
-# Add to crontab: 0 3 1 * * /opt/quickpreview/scripts/renew-ssl.sh >> /var/log/ssl-renew.log 2>&1
+# SSL Certificate Renewal Script for WIGVU
+# Add to crontab: 0 3 1 * * /opt/wigvu/scripts/renew-ssl.sh >> /var/log/ssl-renew.log 2>&1
 
 set -e
 
 DOMAIN="${DOMAIN:-yourdomain.com}"
-PROJECT_DIR="${PROJECT_DIR:-/opt/quickpreview}"
+PROJECT_DIR="${PROJECT_DIR:-/opt/wigvu}"
 
 echo "=========================================="
 echo "SSL Certificate Renewal - $(date)"

@@ -1,4 +1,4 @@
-# QuickPreview API Gateway
+# WIGVU API Gateway
 
 NestJS 기반 API Gateway 서비스
 
@@ -104,8 +104,8 @@ AI 서비스 장애 시 자동으로 Fallback:
 
 ```bash
 # 빌드
-docker build -t quickpreview-api .
+docker build -t wigvu-api .
 
 # 실행
-docker run -p 4000:4000 --env-file .env quickpreview-api
+docker run -p 4000:4000 --env-file .env wigvu-api
 ```
