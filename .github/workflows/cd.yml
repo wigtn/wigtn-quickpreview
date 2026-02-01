@@ -96,8 +96,8 @@ jobs:
           context: ./apps/web
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/wigtn-web:latest
-            ${{ env.IMAGE_PREFIX }}/wigtn-web:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/wigvu-web:latest
+            ${{ env.IMAGE_PREFIX }}/wigvu-web:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -131,8 +131,8 @@ jobs:
           context: ./apps/api
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/wigtn-api:latest
-            ${{ env.IMAGE_PREFIX }}/wigtn-api:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/wigvu-api:latest
+            ${{ env.IMAGE_PREFIX }}/wigvu-api:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -166,8 +166,8 @@ jobs:
           context: ./apps/ai
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/wigtn-ai:latest
-            ${{ env.IMAGE_PREFIX }}/wigtn-ai:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/wigvu-ai:latest
+            ${{ env.IMAGE_PREFIX }}/wigvu-ai:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -208,8 +208,8 @@ jobs:
             --zone=${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --command="
-              git config --global --add safe.directory /opt/quickpreview && \
-              cd /opt/quickpreview && \
+              git config --global --add safe.directory /opt/wigvu && \
+              cd /opt/wigvu && \
               git pull origin main && \
               docker compose -f docker-compose.hub.yml pull && \
               docker compose -f docker-compose.hub.yml up -d --remove-orphans && \
@@ -223,7 +223,7 @@ jobs:
             --zone=${{ env.GCP_ZONE }} \
             --project=${{ env.GCP_PROJECT_ID }} \
             --command="
-              cd /opt/quickpreview && \
+              cd /opt/wigvu && \
               docker compose -f docker-compose.hub.yml exec -T nginx nginx -t && \
               docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload
             "
@@ -235,7 +235,7 @@ jobs:
             --project=${{ env.GCP_PROJECT_ID }} \
             --command="
               # SSL 인증서 자동 갱신 cron job 설정 (이미 있으면 스킵)
-              CRON_CMD='0 3 * * * cd /opt/quickpreview && docker compose -f docker-compose.hub.yml run --rm certbot renew --quiet && docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload'
+              CRON_CMD='0 3 * * * cd /opt/wigvu && docker compose -f docker-compose.hub.yml run --rm certbot renew --quiet && docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload'
               (crontab -l 2>/dev/null | grep -q 'certbot renew') || (crontab -l 2>/dev/null; echo \"\$CRON_CMD\") | crontab -
             "
 
