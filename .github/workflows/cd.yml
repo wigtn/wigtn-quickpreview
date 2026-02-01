@@ -270,8 +270,13 @@ jobs:
             --project=${{ env.GCP_PROJECT_ID }} \
             --command="
               cd /opt/wigvu && \
-              docker compose -f docker-compose.hub.yml exec -T nginx nginx -t && \
-              docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload
+              # 인증서가 있는 경우에만 nginx 설정 테스트 및 리로드
+              if [ -f certbot/conf/live/app.wigtn.com/fullchain.pem ]; then
+                docker compose -f docker-compose.hub.yml exec -T nginx nginx -t && \
+                docker compose -f docker-compose.hub.yml exec -T nginx nginx -s reload
+              else
+                echo '인증서가 아직 없어서 nginx 리로드를 건너뜁니다.'
+              fi
             "
 
       - name: Setup SSL auto-renewal cron (one-time)
