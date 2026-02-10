@@ -177,73 +177,67 @@ export default function VideoDemoPage() {
                 ))}
               </div>
 
-              {/* Desktop: Timeline Bar - Premium Design */}
-              <div className="hidden md:block">
-                <div className="relative py-6">
-                  {/* Timeline Track Background */}
-                  <div className="relative h-2 bg-[var(--muted)] rounded-full mx-6">
-                    {/* Progress Fill */}
-                    <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/70 rounded-full" />
-
-                    {/* Track Border */}
-                    <div className="absolute inset-0 rounded-full border border-[var(--border)]" />
-                  </div>
-
-                  {/* Moment Markers */}
+              {/* Desktop: YouTube Chapter Style Timeline */}
+              <div className="hidden md:block py-4">
+                {/* Segmented Timeline Bar */}
+                <div className="relative h-1.5 bg-[var(--muted)] rounded-full flex">
                   {mockAnalysis.keyMoments.map((moment, index) => {
-                    const position = (moment.seconds / mockVideo.totalSeconds) * 100;
+                    const nextMoment = mockAnalysis.keyMoments[index + 1];
+                    const startPercent = (moment.seconds / mockVideo.totalSeconds) * 100;
+                    const endPercent = nextMoment
+                      ? (nextMoment.seconds / mockVideo.totalSeconds) * 100
+                      : 100;
+                    const widthPercent = endPercent - startPercent;
                     const isHovered = hoveredMoment === index;
+                    // Assume current playback is at 33%
+                    const currentProgress = 33;
+                    const isFilled = startPercent < currentProgress;
+                    const fillAmount = isFilled
+                      ? Math.min(100, ((currentProgress - startPercent) / widthPercent) * 100)
+                      : 0;
 
                     return (
                       <div
                         key={index}
-                        className="absolute top-1/2 -translate-y-1/2"
-                        style={{ left: `calc(${position}% * 0.88 + 24px)` }}
+                        className={`relative cursor-pointer transition-all duration-200 ${
+                          isHovered ? "h-3 -my-[3px] rounded-sm" : "h-1.5"
+                        }`}
+                        style={{ width: `${widthPercent}%` }}
                         onMouseEnter={() => setHoveredMoment(index)}
                         onMouseLeave={() => setHoveredMoment(null)}
                       >
-                        {/* Marker Pin */}
-                        <div className="relative cursor-pointer group">
-                          {/* Vertical Line */}
+                        {/* Segment Fill */}
+                        <div className={`h-full rounded-sm overflow-hidden transition-colors duration-200 ${
+                          isHovered ? "bg-[var(--accent)]" : "bg-[var(--muted)]"
+                        }`}>
+                          {/* Progress Fill */}
                           <div
-                            className={`absolute left-1/2 -translate-x-1/2 w-0.5 transition-all duration-200 ${
-                              isHovered
-                                ? "h-8 -top-6 bg-[var(--accent)]"
-                                : "h-4 -top-3 bg-[var(--foreground)]/40 group-hover:bg-[var(--accent)]"
-                            }`}
+                            className="h-full bg-[var(--accent)]"
+                            style={{ width: `${fillAmount}%` }}
                           />
-
-                          {/* Diamond Marker */}
-                          <div
-                            className={`relative w-3 h-3 rotate-45 transition-all duration-200 ${
-                              isHovered
-                                ? "bg-[var(--accent)] scale-125 shadow-lg shadow-[var(--accent)]/30"
-                                : "bg-[var(--foreground)] group-hover:bg-[var(--accent)] group-hover:scale-110"
-                            }`}
-                          />
-
-                          {/* Time Label (always visible) */}
-                          <div className={`absolute top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono whitespace-nowrap transition-colors ${
-                            isHovered ? "text-[var(--accent)]" : "text-[var(--foreground-tertiary)]"
-                          }`}>
-                            {moment.time}
-                          </div>
                         </div>
 
-                        {/* Tooltip on Hover */}
+                        {/* Segment Divider */}
+                        {index < mockAnalysis.keyMoments.length - 1 && (
+                          <div className="absolute right-0 top-0 w-0.5 h-full bg-[var(--background)]" />
+                        )}
+
+                        {/* Hover Tooltip */}
                         {isHovered && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-10 z-20 animate-fade-in">
-                            <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl p-3 min-w-[180px]">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-                                <span className="text-sm font-semibold">{moment.title}</span>
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-20 animate-fade-in">
+                            <div className="bg-[var(--foreground)] text-[var(--background)] rounded-lg px-4 py-3 shadow-lg min-w-[200px]">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-mono px-1.5 py-0.5 bg-[var(--background)]/20 rounded">
+                                  {moment.time}
+                                </span>
+                                <span className="text-sm font-semibold">
+                                  {moment.title}
+                                </span>
                               </div>
-                              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                              <p className="text-xs opacity-80 leading-relaxed">
                                 {moment.description}
                               </p>
                             </div>
-                            {/* Arrow */}
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-[var(--card)] border-r border-b border-[var(--border)]" />
                           </div>
                         )}
                       </div>
@@ -251,8 +245,8 @@ export default function VideoDemoPage() {
                   })}
                 </div>
 
-                {/* Time Range */}
-                <div className="flex justify-between text-xs text-[var(--foreground-tertiary)] px-6 -mt-1">
+                {/* Time Labels */}
+                <div className="flex justify-between text-xs text-[var(--foreground-tertiary)] mt-3">
                   <span className="font-mono">00:00</span>
                   <span className="font-mono">{mockVideo.duration}</span>
                 </div>
