@@ -260,27 +260,15 @@ export default function ArticleDemoPage() {
                   isHighlighted ? "swiss-highlight" : ""
                 }`}
               >
-                {/* Sentence Content */}
-                <div
-                  className={`${
-                    displayMode === "both"
-                      ? "grid grid-cols-1 md:grid-cols-2 gap-4"
-                      : ""
-                  }`}
-                >
+                {/* Sentence Content - Stacked: Original (bold) + Translation (light) */}
+                <div className="space-y-2">
                   {(displayMode === "both" || displayMode === "original") && (
-                    <p className="text-base leading-relaxed">
+                    <p className="text-base leading-relaxed font-medium">
                       {sentence.original}
                     </p>
                   )}
                   {(displayMode === "both" || displayMode === "translated") && (
-                    <p
-                      className={`text-base leading-relaxed ${
-                        displayMode === "both"
-                          ? "text-[var(--foreground-secondary)]"
-                          : ""
-                      }`}
-                    >
+                    <p className="text-base leading-relaxed text-[var(--foreground-secondary)]">
                       {sentence.translated}
                     </p>
                   )}

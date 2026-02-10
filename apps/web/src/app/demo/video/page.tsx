@@ -177,15 +177,19 @@ export default function VideoDemoPage() {
                 ))}
               </div>
 
-              {/* Desktop: Timeline Bar with Dots */}
+              {/* Desktop: Timeline Bar - Premium Design */}
               <div className="hidden md:block">
-                <div className="relative h-16 bg-[var(--muted)] rounded-lg px-4">
-                  {/* Timeline Track */}
-                  <div className="absolute top-1/2 left-4 right-4 h-1 bg-[var(--border)] rounded-full -translate-y-1/2">
-                    <div className="w-1/3 h-full bg-[var(--accent)] rounded-full" />
+                <div className="relative py-6">
+                  {/* Timeline Track Background */}
+                  <div className="relative h-2 bg-[var(--muted)] rounded-full mx-6">
+                    {/* Progress Fill */}
+                    <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/70 rounded-full" />
+
+                    {/* Track Border */}
+                    <div className="absolute inset-0 rounded-full border border-[var(--border)]" />
                   </div>
 
-                  {/* Moment Dots */}
+                  {/* Moment Markers */}
                   {mockAnalysis.keyMoments.map((moment, index) => {
                     const position = (moment.seconds / mockVideo.totalSeconds) * 100;
                     const isHovered = hoveredMoment === index;
@@ -193,36 +197,53 @@ export default function VideoDemoPage() {
                     return (
                       <div
                         key={index}
-                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
-                        style={{ left: `calc(${position}% + 16px - ${position * 0.32}px)` }}
+                        className="absolute top-1/2 -translate-y-1/2"
+                        style={{ left: `calc(${position}% * 0.88 + 24px)` }}
                         onMouseEnter={() => setHoveredMoment(index)}
                         onMouseLeave={() => setHoveredMoment(null)}
                       >
-                        {/* Dot */}
-                        <div
-                          className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
-                            isHovered
-                              ? "bg-[var(--accent)] scale-150"
-                              : "bg-[var(--foreground)] hover:bg-[var(--accent)]"
-                          }`}
-                        />
+                        {/* Marker Pin */}
+                        <div className="relative cursor-pointer group">
+                          {/* Vertical Line */}
+                          <div
+                            className={`absolute left-1/2 -translate-x-1/2 w-0.5 transition-all duration-200 ${
+                              isHovered
+                                ? "h-8 -top-6 bg-[var(--accent)]"
+                                : "h-4 -top-3 bg-[var(--foreground)]/40 group-hover:bg-[var(--accent)]"
+                            }`}
+                          />
 
-                        {/* Tooltip */}
+                          {/* Diamond Marker */}
+                          <div
+                            className={`relative w-3 h-3 rotate-45 transition-all duration-200 ${
+                              isHovered
+                                ? "bg-[var(--accent)] scale-125 shadow-lg shadow-[var(--accent)]/30"
+                                : "bg-[var(--foreground)] group-hover:bg-[var(--accent)] group-hover:scale-110"
+                            }`}
+                          />
+
+                          {/* Time Label (always visible) */}
+                          <div className={`absolute top-5 left-1/2 -translate-x-1/2 text-[10px] font-mono whitespace-nowrap transition-colors ${
+                            isHovered ? "text-[var(--accent)]" : "text-[var(--foreground-tertiary)]"
+                          }`}>
+                            {moment.time}
+                          </div>
+                        </div>
+
+                        {/* Tooltip on Hover */}
                         {isHovered && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-10 animate-fade-in">
-                            <div className="swiss-popover min-w-[200px] text-center">
-                              <div className="text-xs font-mono text-[var(--accent)] mb-1">
-                                {moment.time}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-10 z-20 animate-fade-in">
+                            <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg shadow-xl p-3 min-w-[180px]">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-2 h-2 rounded-full bg-[var(--accent)]" />
+                                <span className="text-sm font-semibold">{moment.title}</span>
                               </div>
-                              <div className="text-sm font-medium mb-1">
-                                {moment.title}
-                              </div>
-                              <div className="text-xs text-[var(--foreground-secondary)]">
+                              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
                                 {moment.description}
-                              </div>
+                              </p>
                             </div>
-                            {/* Tooltip Arrow */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[var(--card)]" />
+                            {/* Arrow */}
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-[var(--card)] border-r border-b border-[var(--border)]" />
                           </div>
                         )}
                       </div>
@@ -230,10 +251,10 @@ export default function VideoDemoPage() {
                   })}
                 </div>
 
-                {/* Time Labels */}
-                <div className="flex justify-between mt-2 text-xs text-[var(--foreground-tertiary)] px-1">
-                  <span>00:00</span>
-                  <span>{mockVideo.duration}</span>
+                {/* Time Range */}
+                <div className="flex justify-between text-xs text-[var(--foreground-tertiary)] px-6 -mt-1">
+                  <span className="font-mono">00:00</span>
+                  <span className="font-mono">{mockVideo.duration}</span>
                 </div>
               </div>
             </div>
@@ -334,7 +355,7 @@ export default function VideoDemoPage() {
               </div>
 
               {/* Script Content */}
-              <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+              <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
                 {mockSegments.map((segment, index) => {
                   const isActive = index === activeSegment;
 

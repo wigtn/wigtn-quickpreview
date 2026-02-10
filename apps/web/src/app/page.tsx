@@ -74,35 +74,37 @@ export default function Home() {
               <span className="text-xl font-bold tracking-tight">WIGVU</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href="#features" className="swiss-nav-item">
-                기능
-              </Link>
-              <Link href="#how-it-works" className="swiss-nav-item">
-                사용법
-              </Link>
-            </nav>
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6">
+                <Link href="#features" className="swiss-nav-item">
+                  기능
+                </Link>
+                <Link href="#how-it-works" className="swiss-nav-item">
+                  사용법
+                </Link>
+              </nav>
 
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleTheme}
-                className="btn-ghost p-2"
-                aria-label="Toggle theme"
-              >
-                {isDark ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </button>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost hidden sm:flex"
-              >
-                GitHub
-              </a>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleTheme}
+                  className="btn-ghost p-2"
+                  aria-label="Toggle theme"
+                >
+                  {isDark ? (
+                    <Sun className="w-5 h-5" />
+                  ) : (
+                    <Moon className="w-5 h-5" />
+                  )}
+                </button>
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-ghost hidden sm:flex"
+                >
+                  GitHub
+                </a>
+              </div>
             </div>
           </div>
         </div>
