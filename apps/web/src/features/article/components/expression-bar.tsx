@@ -14,6 +14,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   phrasal_verb: "Phrasal Verb",
   collocation: "Collocation",
   technical_term: "Technical Term",
+  grammar_pattern: "Grammar",
+  formal_expression: "Formal",
+  slang: "Slang",
 };
 
 export function ExpressionBar({

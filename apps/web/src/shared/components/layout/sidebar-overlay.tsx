@@ -43,8 +43,8 @@ export function SidebarOverlay({ isOpen, onClose }: SidebarOverlayProps) {
 
   if (!isOpen) return null;
 
-  const isStudyActive =
-    pathname === "/" || pathname === "/study" || pathname.startsWith("/study");
+  const isReadActive =
+    pathname === "/" || pathname === "/read" || pathname.startsWith("/read");
   const isVideoActive =
     pathname === "/video" || pathname.startsWith("/analyze");
 
@@ -83,15 +83,13 @@ export function SidebarOverlay({ isOpen, onClose }: SidebarOverlayProps) {
             href="/"
             icon={BookOpen}
             label="Read"
-            active={isStudyActive}
+            active={isReadActive}
             collapsed={false}
           />
-
-          <div className="sidebar-section-label mt-4">Tools</div>
           <SidebarItem
             href="/video"
             icon={Film}
-            label="Video Analysis"
+            label="Watch"
             active={isVideoActive}
             collapsed={false}
           />

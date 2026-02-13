@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   BookOpen,
-  Newspaper,
   Film,
   Sun,
   Moon,
@@ -50,9 +49,8 @@ export function Sidebar() {
     }
   };
 
-  const isStudyActive =
-    pathname === "/" || pathname === "/study" || pathname.startsWith("/study");
-  const isReadActive = pathname === "/read" || pathname.startsWith("/read");
+  const isReadActive =
+    pathname === "/" || pathname === "/read" || pathname.startsWith("/read");
   const isVideoActive =
     pathname === "/video" || pathname.startsWith("/analyze");
 
@@ -92,24 +90,13 @@ export function Sidebar() {
           href="/"
           icon={BookOpen}
           label="Read"
-          active={isStudyActive}
-          collapsed={!isExpanded}
-        />
-        <SidebarItem
-          href="/read"
-          icon={Newspaper}
-          label="Articles"
           active={isReadActive}
           collapsed={!isExpanded}
         />
-
-        <div className="sidebar-section-label mt-4" style={{ display: isExpanded ? "block" : "none" }}>
-          Tools
-        </div>
         <SidebarItem
           href="/video"
           icon={Film}
-          label="Video Analysis"
+          label="Watch"
           active={isVideoActive}
           collapsed={!isExpanded}
         />

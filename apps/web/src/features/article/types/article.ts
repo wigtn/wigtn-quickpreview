@@ -17,7 +17,7 @@ export interface ArticleSentence {
 export interface ArticleExpression {
   expression: string;
   meaning: string;
-  category: "idiom" | "phrasal_verb" | "collocation" | "technical_term";
+  category: "idiom" | "phrasal_verb" | "collocation" | "technical_term" | "grammar_pattern" | "formal_expression" | "slang";
   sentenceId: number;
   context: string;
 }

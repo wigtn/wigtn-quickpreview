@@ -1,19 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, AlertCircle, Newspaper } from "lucide-react";
 import { useArticleAnalysis } from "@/features/article/hooks/use-article-analysis";
 import { ArticlePanel } from "@/features/article/components/article-panel";
 import { ExpressionBar } from "@/features/article/components/expression-bar";
+import { ExpressionSummary } from "@/features/article/components/expression-summary";
 import type { ArticleDisplayMode } from "@/features/article/types/article";
 
 export default function ReadPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    }>
+      <ReadPageContent />
+    </Suspense>
+  );
+}
+
+function ReadPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     steps,
     isLoading,
-    isComplete,
     error,
     result,
     startAnalysis,
@@ -27,6 +40,36 @@ export default function ReadPage() {
   const [highlightSentenceId, setHighlightSentenceId] = useState<
     number | null
   >(null);
+
+  // Auto-start analysis from query params or sessionStorage
+  const hasAutoStarted = useRef(false);
+  useEffect(() => {
+    if (hasAutoStarted.current) return;
+
+    const articleId = searchParams.get("article");
+    const url = searchParams.get("url");
+
+    if (articleId) {
+      hasAutoStarted.current = true;
+      // Dynamic import to avoid bundling data when not needed
+      import("@/features/article/data/curated-articles").then(({ CURATED_ARTICLES }) => {
+        const article = CURATED_ARTICLES.find((a) => a.id === articleId);
+        if (article) {
+          startAnalysis({ text: article.content, title: article.title });
+        }
+      });
+    } else if (url) {
+      hasAutoStarted.current = true;
+      startAnalysis({ url: decodeURIComponent(url) });
+    } else {
+      const storedText = sessionStorage.getItem("readText");
+      if (storedText) {
+        hasAutoStarted.current = true;
+        sessionStorage.removeItem("readText");
+        startAnalysis({ text: storedText });
+      }
+    }
+  }, [searchParams, startAnalysis]);
 
   const handleSubmit = () => {
     if (inputMode === "url" && urlValue.trim()) {
@@ -43,8 +86,12 @@ export default function ReadPage() {
     setHighlightSentenceId(null);
   };
 
+  const handleBackHome = () => {
+    router.push("/");
+  };
+
   // Input view
-  if (!isLoading && !result && !error) {
+  if (!isLoading && !result && !error && !hasAutoStarted.current) {
     return (
       <div
         className="flex flex-col items-center px-4 sm:px-6"
@@ -92,14 +139,14 @@ export default function ReadPage() {
                 value={urlValue}
                 onChange={(e) => setUrlValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder="https://bbc.com/news/article..."
+                placeholder="https://news.naver.com/article..."
                 className="w-full px-4 py-3 rounded-xl border border-border bg-[var(--surface)] text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted-foreground/50"
               />
             ) : (
               <textarea
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
-                placeholder="Paste English text here..."
+                placeholder="Paste Korean text here..."
                 rows={6}
                 className="w-full px-4 py-3 rounded-xl border border-border bg-[var(--surface)] text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted-foreground/50 resize-none"
               />
@@ -188,12 +235,20 @@ export default function ReadPage() {
               {error.message}
             </p>
           </div>
-          <button
-            onClick={handleReset}
-            className="px-6 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-all"
-          >
-            Try Again
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={handleReset}
+              className="px-6 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition-all"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={handleBackHome}
+              className="px-6 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -207,8 +262,9 @@ export default function ReadPage() {
         <div className="px-4 py-3 border-b border-border">
           <div className="flex items-center gap-3">
             <button
-              onClick={handleReset}
+              onClick={handleBackHome}
               className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+              title="Back to Home"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -245,13 +301,27 @@ export default function ReadPage() {
         />
 
         {/* Article panel */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
           <ArticlePanel
             sentences={result.sentences}
             displayMode={displayMode}
             onDisplayModeChange={setDisplayMode}
             highlightSentenceId={highlightSentenceId}
           />
+
+          {/* Expression summary */}
+          <ExpressionSummary expressions={result.expressions} />
+
+          {/* New Article button */}
+          <div className="px-4 py-6 border-t border-border">
+            <button
+              onClick={handleBackHome}
+              className="flex items-center gap-2 text-sm text-accent hover:text-accent/80 font-medium transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              New Article
+            </button>
+          </div>
         </div>
       </div>
     );

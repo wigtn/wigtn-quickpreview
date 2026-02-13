@@ -1,22 +1,23 @@
 "use client";
 
-import type { StudyExpression } from "@/features/study/types/study";
+import type { ArticleExpression } from "@/features/article/types/article";
 
 interface ExpressionSummaryProps {
-  expressions: StudyExpression[];
+  expressions: ArticleExpression[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
   idiom: "Idiom",
+  phrasal_verb: "Phrasal Verb",
   collocation: "Collocation",
-  slang: "Slang",
-  formal_expression: "Formal",
+  technical_term: "Technical Term",
   grammar_pattern: "Grammar",
+  formal_expression: "Formal",
+  slang: "Slang",
 };
 
 export function ExpressionSummary({ expressions }: ExpressionSummaryProps) {
-  // Group by category
-  const grouped = expressions.reduce<Record<string, StudyExpression[]>>(
+  const grouped = expressions.reduce<Record<string, ArticleExpression[]>>(
     (acc, expr) => {
       const cat = expr.category;
       if (!acc[cat]) acc[cat] = [];
@@ -31,26 +32,26 @@ export function ExpressionSummary({ expressions }: ExpressionSummaryProps) {
   if (categories.length === 0) return null;
 
   return (
-    <div>
-      <h3 className="text-base font-semibold mb-4">Expression Review Summary</h3>
-      <p className="text-sm text-[var(--foreground-secondary)] mb-6">
-        Expressions learned from this text
+    <div className="px-4 py-6 border-t border-border">
+      <h3 className="text-base font-semibold mb-1">Expression Summary</h3>
+      <p className="text-sm text-muted-foreground mb-5">
+        Expressions found in this article
       </p>
 
       <div className="space-y-5">
         {categories.map(([category, exprs]) => (
           <div key={category}>
-            <h4 className="text-sm font-medium text-[var(--foreground)] mb-2">
+            <h4 className="text-sm font-medium text-foreground mb-2">
               {CATEGORY_LABELS[category] || category} ({exprs.length})
             </h4>
             <ul className="space-y-1.5">
               {exprs.map((expr, i) => (
                 <li
                   key={i}
-                  className="text-sm text-[var(--foreground-secondary)]"
+                  className="text-sm text-muted-foreground"
                 >
-                  <span className="text-[var(--foreground-secondary)]">· </span>
-                  <span className="text-[var(--foreground)] font-medium">
+                  <span className="text-muted-foreground">· </span>
+                  <span className="text-foreground font-medium">
                     {expr.expression}
                   </span>
                   <span> — {expr.meaning}</span>
