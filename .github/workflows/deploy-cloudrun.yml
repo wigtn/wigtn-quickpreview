@@ -128,7 +128,7 @@ jobs:
             --max-instances=10
             --timeout=300
             --allow-unauthenticated
-            --set-secrets=INTERNAL_API_KEY=INTERNAL_API_KEY:latest
+            --set-secrets=INTERNAL_API_KEY=INTERNAL_API_KEY:latest,YOUTUBE_API_KEY=YOUTUBE_API_KEY:latest
           env_vars: |
             AI_SERVICE_URL=${{ steps.ai-url.outputs.url }}
             NODE_ENV=production

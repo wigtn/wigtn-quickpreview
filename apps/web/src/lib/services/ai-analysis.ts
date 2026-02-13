@@ -63,7 +63,7 @@ export async function analyzeWithAI(
     segments: segments || undefined,
   };
 
-  const response = await fetch(`${config.API_URL}/api/v1/analyze`, {
+  const response = await fetch(`${config.AI_SERVICE_URL}/api/v1/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

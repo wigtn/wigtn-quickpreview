@@ -8,8 +8,10 @@ import { STT } from "../constants";
 const logger = createLogger("Env");
 
 interface EnvConfig {
-  /** NestJS API Gateway URL (Required) */
-  API_URL: string;
+  /** AI Service URL (FastAPI - apps/ai) */
+  AI_SERVICE_URL: string;
+  /** YouTube Data API Key */
+  YOUTUBE_API_KEY: string;
   STT_MAX_DURATION_MINUTES: number;
 }
 
@@ -29,7 +31,8 @@ function validateRequiredEnv(key: string): string {
  */
 export function getEnvConfig(): EnvConfig {
   return {
-    API_URL: validateRequiredEnv("API_URL"),
+    AI_SERVICE_URL: validateRequiredEnv("AI_SERVICE_URL"),
+    YOUTUBE_API_KEY: validateRequiredEnv("YOUTUBE_API_KEY"),
     STT_MAX_DURATION_MINUTES: parseInt(
       process.env.STT_MAX_DURATION_MINUTES ||
         STT.DEFAULT_MAX_DURATION_MINUTES.toString()

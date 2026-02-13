@@ -1,6 +1,6 @@
 /**
  * 비디오 자막 추출 서비스
- * NestJS API Gateway를 통해 YouTube 자막 또는 STT fallback
+ * YouTube 자막 스크래핑 + AI 서비스 STT fallback
  */
 
 import { getEnvConfig } from "@/lib/config/env";
@@ -45,24 +45,6 @@ export interface TranscriptResult {
   isKorean?: boolean;
 }
 
-interface TranscriptApiResponse {
-  success: boolean;
-  data?: {
-    source: TranscriptSource;
-    language: string;
-    isKorean: boolean;
-    segments: STTSegment[];
-  };
-  meta?: {
-    cached: boolean;
-    segmentCount: number;
-  };
-  error?: {
-    code: string;
-    message: string;
-  };
-}
-
 /**
  * 한국어 자막 코드 확인
  */
@@ -71,9 +53,203 @@ function isKoreanCode(code: string): boolean {
 }
 
 /**
- * 자막 추출 (NestJS API Gateway 경유)
- * - YouTube 자막 우선, STT fallback
- * - 캐싱, Rate Limiting 적용
+ * HTML entity 디코딩
+ */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/\n/g, " ")
+    .trim();
+}
+
+/**
+ * YouTube 캡션 XML 파싱 → 세그먼트 배열
+ */
+function parseYouTubeCaptionXml(xml: string): STTSegment[] {
+  const segments: STTSegment[] = [];
+  const textRegex =
+    /<text start="([^"]+)" dur="([^"]+)"[^>]*>([^<]*)<\/text>/g;
+  let match;
+
+  while ((match = textRegex.exec(xml)) !== null) {
+    const start = parseFloat(match[1]);
+    const duration = parseFloat(match[2]);
+    const text = decodeHtmlEntities(match[3].trim());
+
+    if (text) {
+      segments.push({
+        start,
+        end: start + duration,
+        text,
+      });
+    }
+  }
+
+  return segments;
+}
+
+/**
+ * YouTube 페이지에서 자막 추출 (HTML 스크래핑)
+ */
+async function fetchYouTubeTranscript(
+  videoId: string,
+  language: string
+): Promise<{
+  source: TranscriptSource;
+  language: string;
+  isKorean: boolean;
+  segments: STTSegment[];
+}> {
+  try {
+    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const pageResponse = await fetch(videoPageUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "en-US,en;q=0.9,ko;q=0.8",
+      },
+    });
+
+    if (!pageResponse.ok) {
+      logger.error("YouTube 페이지 로드 실패", {
+        videoId,
+        status: pageResponse.status,
+      });
+      return { source: "none", language: "unknown", isKorean: false, segments: [] };
+    }
+
+    const pageHtml = await pageResponse.text();
+
+    // captionTracks 추출
+    const captionTracksMatch = pageHtml.match(
+      /"captionTracks":\s*(\[.*?\])/
+    );
+
+    if (!captionTracksMatch) {
+      logger.debug("캡션 트랙 없음", { videoId });
+      return { source: "none", language: "unknown", isKorean: false, segments: [] };
+    }
+
+    const captionTracks = JSON.parse(captionTracksMatch[1]) as Array<{
+      baseUrl: string;
+      languageCode: string;
+      name?: { simpleText?: string };
+    }>;
+
+    // 최적 캡션 트랙 선택
+    let selectedTrack = captionTracks[0];
+    const targetLang = language === "auto" ? "ko" : language;
+
+    const targetTrack = captionTracks.find(
+      (track) => track.languageCode === targetLang
+    );
+    if (targetTrack) {
+      selectedTrack = targetTrack;
+    }
+
+    // 캡션 XML 다운로드
+    const captionUrl = selectedTrack.baseUrl.replace(/\\u0026/g, "&");
+    const captionResponse = await fetch(captionUrl);
+
+    if (!captionResponse.ok) {
+      logger.error("캡션 XML 다운로드 실패", { videoId });
+      return { source: "none", language: "unknown", isKorean: false, segments: [] };
+    }
+
+    const captionXml = await captionResponse.text();
+    const segments = parseYouTubeCaptionXml(captionXml);
+    const detectedLanguage = selectedTrack.languageCode;
+
+    return {
+      source: "youtube",
+      language: detectedLanguage,
+      isKorean: isKoreanCode(detectedLanguage),
+      segments,
+    };
+  } catch (error) {
+    logger.error(
+      "YouTube 자막 추출 실패",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+    return { source: "none", language: "unknown", isKorean: false, segments: [] };
+  }
+}
+
+/**
+ * AI 서비스 STT fallback 호출
+ */
+async function fetchSTTFromAI(
+  videoId: string,
+  language: string
+): Promise<{
+  source: TranscriptSource;
+  language: string;
+  isKorean: boolean;
+  segments: STTSegment[];
+} | null> {
+  const config = getEnvConfig();
+
+  try {
+    const response = await fetch(
+      `${config.AI_SERVICE_URL}/stt/video/${videoId}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language }),
+      }
+    );
+
+    if (response.status === 413 || response.status === 422) {
+      throw new TranscriptError(
+        ERROR_CODES.AUDIO_TOO_LONG,
+        "영상이 너무 길어요! 더 짧은 영상을 시도해주세요.",
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      if (result.error?.code) {
+        throw new TranscriptError(
+          result.error.code,
+          result.error.message || "STT 처리 중 오류가 발생했습니다",
+          { status: response.status }
+        );
+      }
+      return null;
+    }
+
+    if (result.data?.segments?.length > 0) {
+      return {
+        source: "stt",
+        language: result.data.language,
+        isKorean: isKoreanCode(result.data.language),
+        segments: result.data.segments.map(
+          (seg: { start: number; end: number; text: string }) => ({
+            start: seg.start,
+            end: seg.end,
+            text: seg.text,
+          })
+        ),
+      };
+    }
+
+    return null;
+  } catch (error) {
+    if (error instanceof TranscriptError) throw error;
+    logger.error("STT fallback 실패", error);
+    return null;
+  }
+}
+
+/**
+ * 자막 추출 (YouTube 스크래핑 → STT fallback)
  */
 export async function fetchTranscript(
   videoId: string,
@@ -82,102 +258,91 @@ export async function fetchTranscript(
 ): Promise<TranscriptResult> {
   const config = getEnvConfig();
 
-  // API_URL 우선, 없으면 fallback으로 직접 처리
-  const baseUrl = config.API_URL;
-
-  if (!baseUrl) {
-    logger.warn("API_URL not configured, transcript fetching disabled");
-    return { transcript: null, source: "none" };
-  }
-
-  logger.info("자막 추출 시작 (via NestJS Gateway)", { videoId, duration });
+  logger.info("자막 추출 시작", { videoId, duration });
 
   try {
-    const url = new URL(`${baseUrl}/api/v1/transcript/${videoId}`);
-    url.searchParams.set("language", language);
-    url.searchParams.set("useStt", "true");
+    // 1. YouTube 자막 시도
+    const youtubeResult = await fetchYouTubeTranscript(videoId, language);
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    if (youtubeResult.segments.length > 0) {
+      const transcript = youtubeResult.segments
+        .map((seg) => seg.text)
+        .join(" ");
 
-    const result: TranscriptApiResponse = await response.json();
-
-    if (!response.ok || !result.success || !result.data) {
-      logger.error("자막 API 실패", {
-        status: response.status,
-        error: result.error,
+      logger.info("YouTube 자막 추출 성공", {
+        videoId,
+        language: youtubeResult.language,
+        segmentsCount: youtubeResult.segments.length,
       });
 
-      // 에러 코드가 있으면 상위로 전파
-      if (result.error?.code) {
-        throw new TranscriptError(
-          result.error.code,
-          result.error.message || "자막 추출 중 오류가 발생했습니다",
-          { status: response.status }
-        );
-      }
+      return {
+        transcript,
+        source: "youtube",
+        segments: youtubeResult.segments,
+        captionLanguage: youtubeResult.language,
+        isKorean: youtubeResult.isKorean,
+        detectedLanguage: {
+          code: youtubeResult.language,
+          probability: 1.0,
+        },
+      };
+    }
 
-      // 특정 HTTP 상태 코드에 대한 처리
-      if (response.status === 413 || response.status === 422) {
-        throw new TranscriptError(
-          ERROR_CODES.AUDIO_TOO_LONG,
-          "영상이 너무 길어요! 더 짧은 영상을 시도해주세요.",
-          { status: response.status }
-        );
-      }
+    // 2. STT fallback
+    logger.debug("YouTube 자막 없음, STT fallback 시도", { videoId });
 
+    const maxDurationSeconds = config.STT_MAX_DURATION_MINUTES * 60;
+    if (duration > maxDurationSeconds) {
+      logger.warn("영상 길이 초과, STT 건너뜀", {
+        videoId,
+        duration,
+        maxDurationSeconds,
+      });
       return { transcript: null, source: "none" };
     }
 
-    const { data } = result;
+    const sttResult = await fetchSTTFromAI(videoId, language);
 
-    if (data.source === "none" || data.segments.length === 0) {
-      logger.info("자막 없음");
-      return { transcript: null, source: "none" };
+    if (sttResult) {
+      const transcript = sttResult.segments.map((seg) => seg.text).join(" ");
+
+      logger.info("STT fallback 성공", {
+        videoId,
+        language: sttResult.language,
+        segmentsCount: sttResult.segments.length,
+      });
+
+      return {
+        transcript,
+        source: "stt",
+        segments: sttResult.segments,
+        captionLanguage: sttResult.language,
+        isKorean: sttResult.isKorean,
+        detectedLanguage: {
+          code: sttResult.language,
+          probability: 1.0,
+        },
+      };
     }
 
-    // segments에서 전체 텍스트 생성
-    const transcript = data.segments.map((seg) => seg.text).join(" ");
-
-    logger.info("자막 추출 성공", {
-      source: data.source,
-      language: data.language,
-      segmentsCount: data.segments.length,
-      cached: result.meta?.cached,
-    });
-
-    return {
-      transcript,
-      source: data.source,
-      segments: data.segments,
-      captionLanguage: data.language,
-      isKorean: data.isKorean || isKoreanCode(data.language),
-      detectedLanguage: {
-        code: data.language,
-        probability: 1.0,
-      },
-    };
+    logger.info("자막 없음", { videoId });
+    return { transcript: null, source: "none" };
   } catch (error) {
-    // TranscriptError는 상위로 전파 (AUDIO_TOO_LONG, TRANSCRIPT_TOO_LONG 등)
     if (error instanceof TranscriptError) {
       logger.error("자막 추출 실패 - 에러 전파", {
         code: error.code,
-        message: error.message
+        message: error.message,
       });
       throw error;
     }
 
-    logger.error("자막 API 호출 실패", error);
+    logger.error("자막 추출 실패", error);
     return { transcript: null, source: "none" };
   }
 }
 
 /**
- * STT 제한 시간 확인 (deprecated - API Gateway에서 처리)
+ * STT 제한 시간 확인
  */
 export function isWithinSTTLimit(durationSeconds: number): boolean {
   const config = getEnvConfig();
