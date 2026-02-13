@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 시스템 의존성 설치 (필요한 경우만)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# 보안: non-root 사용자 생성
+RUN useradd -m -u 1001 appuser
+
+# Python 의존성 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 애플리케이션 코드 복사 및 권한 설정
+COPY . .
+RUN chown -R appuser:appuser /app
+
+# appuser로 전환
+USER appuser
+
+# 포트 노출
+EXPOSE 8000
+
+# Health check 추가 (Cloud Run에서 권장)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+# Uvicorn 서버 실행
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

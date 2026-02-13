@@ -1,0 +1,134 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGION: asia-northeast3
+  REGISTRY: asia-northeast3-docker.pkg.dev
+  REPO: wigvu-repo
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # ─── Build AI Docker image ──────────────────────────────────────────────────
+  build-ai:
+    name: Build AI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push AI image
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/wigvu-ai:${{ github.sha }}"
+          docker build -t "${IMAGE}" -t "${IMAGE%:*}:latest" apps/ai/
+          docker push "${IMAGE}"
+          docker push "${IMAGE%:*}:latest"
+
+  # ─── Build Web Docker image ─────────────────────────────────────────────────
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push Web image
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/wigvu-web:${{ github.sha }}"
+          docker build \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://wigvu.com' }} \
+            -t "${IMAGE}" \
+            -t "${IMAGE%:*}:latest" \
+            apps/web/
+          docker push "${IMAGE}"
+          docker push "${IMAGE%:*}:latest"
+
+  # ─── Deploy AI to Cloud Run ─────────────────────────────────────────────────
+  deploy-ai:
+    name: Deploy AI
+    needs: [build-ai]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Deploy AI to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: wigvu-ai
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/wigvu-ai:${{ github.sha }}
+          flags: >-
+            --cpu=1
+            --memory=1Gi
+            --min-instances=1
+            --max-instances=5
+            --timeout=600
+            --allow-unauthenticated
+            --set-secrets=OPENAI_API_KEY=OPENAI_API_KEY:latest,YOUTUBE_API_KEY=YOUTUBE_API_KEY:latest,INTERNAL_API_KEY=INTERNAL_API_KEY:latest,STT_API_URL=STT_API_URL:latest
+          env_vars: |
+            ENVIRONMENT=production
+            CORS_ORIGINS=${{ vars.CORS_ORIGINS || '' }}
+            LOG_LEVEL=INFO
+
+  # ─── Deploy Web to Cloud Run ────────────────────────────────────────────────
+  deploy-web:
+    name: Deploy Web
+    needs: [build-web, deploy-ai]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Get AI service URL
+        id: ai-url
+        run: |
+          URL=$(gcloud run services describe wigvu-ai --region=${{ env.REGION }} --format='value(status.url)')
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Web to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: wigvu-web
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/wigvu-web:${{ github.sha }}
+          flags: >-
+            --cpu=1
+            --memory=512Mi
+            --min-instances=0
+            --max-instances=10
+            --timeout=300
+            --allow-unauthenticated
+            --set-secrets=INTERNAL_API_KEY=INTERNAL_API_KEY:latest
+          env_vars: |
+            AI_SERVICE_URL=${{ steps.ai-url.outputs.url }}
+            NODE_ENV=production

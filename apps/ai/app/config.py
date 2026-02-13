@@ -1,6 +1,7 @@
 """Configuration management for AI Service"""
 
 from functools import lru_cache
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -35,6 +36,12 @@ class Settings(BaseSettings):
     timeout_stt: int = 300
     timeout_health: int = 5
 
+    # CORS
+    cors_origins: str = ""  # Comma-separated origins, empty = allow all (dev only)
+
+    # Environment
+    environment: str = "development"
+
     # Logging
     log_level: str = "INFO"
 
@@ -44,6 +51,12 @@ class Settings(BaseSettings):
     max_description_length: int = 10000  # YouTube allows up to 5000, but some have more
     max_transcript_length: int = 50000
     max_segments_count: int = 1000
+
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> "Settings":
+        if self.environment == "production" and not self.internal_api_key:
+            raise ValueError("INTERNAL_API_KEY is required in production environment")
+        return self
 
     class Config:
         env_file = ".env"

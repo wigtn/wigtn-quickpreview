@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { UrlInput } from "@/components/url-input";
 import { HeroSection } from "@/components/hero-section";
 import { extractVideoId } from "@/lib/youtube";
+import dynamic from "next/dynamic";
+
+const KlaimPricingTable = dynamic(
+  () => import("@/components/klaim-pricing-table"),
+  { ssr: false }
+);
 import {
   Zap,
   Languages,
@@ -476,6 +482,24 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* Pricing 섹션 */}
+      <section
+        id="pricing"
+        className="min-h-screen flex items-center px-4 md:px-6 py-12"
+      >
+        <div className="max-w-6xl mx-auto w-full space-y-8 md:space-y-12">
+          <div className="text-center space-y-2 md:space-y-3">
+            <h2 className="text-xl md:text-3xl font-bold">
+              요금제를 선택하세요
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              무료로 시작하고 필요에 따라 업그레이드하세요
+            </p>
+          </div>
+          <KlaimPricingTable />
+        </div>
+      </section>
 
       {/* URL 입력 섹션 - 스크롤 */}
       <section

@@ -1,0 +1,43 @@
+# Builder stage - 빌드 시에만 필요한 것들을 설치
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# 패키지 매니저 의존성 복사 및 설치
+COPY package*.json ./
+RUN npm ci
+
+# 소스 코드 복사 및 빌드
+COPY . .
+RUN npm run build
+
+# Production stage - 실제 운영할 때 사용할 이미지
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 보안: non-root 사용자 생성
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# 프로덕션 의존성만 설치
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Builder에서 빌드된 파일 복사
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
+
+# nextjs 사용자로 전환
+USER nextjs
+
+# 포트 노출
+EXPOSE 3000
+
+# Health check 추가 (Cloud Run에서 권장)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Next.js 서버 실행
+CMD ["npm", "start"]

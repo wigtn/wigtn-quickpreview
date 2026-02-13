@@ -1,0 +1,106 @@
+steps:
+  # Step 1: Next.js 이미지 빌드
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-nextjs'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:$SHORT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    env:
+      - 'DOCKER_BUILDKIT=1'
+
+  # Step 2: Next.js 이미지 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-nextjs'
+    args:
+      - 'push'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:$SHORT_SHA'
+
+  # Step 3: Python AI 서비스 이미지 빌드
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-python'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:$SHORT_SHA'
+      - '-t'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:latest'
+      - '-f'
+      - 'ai-service/Dockerfile'
+      - 'ai-service/'
+    env:
+      - 'DOCKER_BUILDKIT=1'
+
+  # Step 4: Python AI 서비스 이미지 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-python'
+    args:
+      - 'push'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:$SHORT_SHA'
+
+  # Step 5: Python AI 서비스를 Cloud Run에 배포
+  - name: 'gcr.io/cloud-builders/run'
+    id: 'deploy-python'
+    args:
+      - 'deploy'
+      - 'wigtn-ai-service'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:$SHORT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '3600'
+      - '--set-env-vars'
+      - 'OPENAI_API_KEY=${_OPENAI_API_KEY},SUPABASE_URL=${_SUPABASE_URL},SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY}'
+
+  # Step 6: Next.js를 Cloud Run에 배포
+  - name: 'gcr.io/cloud-builders/run'
+    id: 'deploy-nextjs'
+    args:
+      - 'deploy'
+      - 'wigtn'
+      - '--image'
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:$SHORT_SHA'
+      - '--region'
+      - 'asia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '3600'
+      - '--set-env-vars'
+      - 'SUPABASE_URL=${_SUPABASE_URL},SUPABASE_ANON_KEY=${_SUPABASE_ANON_KEY},OPENAI_API_KEY=${_OPENAI_API_KEY},NEXT_PUBLIC_AI_SERVICE_URL=${_NEXT_PUBLIC_AI_SERVICE_URL}'
+
+images:
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:$SHORT_SHA'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:$SHORT_SHA'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/nextjs:latest'
+  - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/wigtn-repo/ai-service:latest'
+
+substitutions:
+  _SUPABASE_URL: 'projects/${PROJECT_ID}/secrets/SUPABASE_URL/versions/latest'
+  _SUPABASE_ANON_KEY: 'projects/${PROJECT_ID}/secrets/SUPABASE_ANON_KEY/versions/latest'
+  _OPENAI_API_KEY: 'projects/${PROJECT_ID}/secrets/OPENAI_API_KEY/versions/latest'
+  _NEXT_PUBLIC_AI_SERVICE_URL: 'https://wigtn-ai-service-xxxxx.run.app'  # Cloud Run 배포 후 실제 URL로 변경
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '3600s'

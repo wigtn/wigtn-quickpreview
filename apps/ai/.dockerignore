@@ -1,0 +1,28 @@
+# Environment
+.env*
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+venv/
+.venv/
+
+# IDE
+.idea
+.vscode
+
+# Git
+.git
+.gitignore
+
+# Testing
+coverage
+htmlcov
+
+# Misc
+.DS_Store
+*.md

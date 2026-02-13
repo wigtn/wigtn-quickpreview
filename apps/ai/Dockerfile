@@ -31,6 +31,7 @@ COPY . .
 RUN useradd --create-home --shell /bin/bash appuser
 USER appuser
 
-EXPOSE 5000
+ENV PORT=5000
+EXPOSE ${PORT}
 
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["sh", "-c", "python -m uvicorn main:app --host 0.0.0.0 --port ${PORT}"]

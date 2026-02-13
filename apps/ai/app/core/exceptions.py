@@ -29,6 +29,9 @@ class ErrorCode(str, Enum):
     SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
     STT_UNAVAILABLE = "STT_UNAVAILABLE"
 
+    # Configuration errors
+    CONFIGURATION_ERROR = "CONFIGURATION_ERROR"
+
 
 class AIServiceError(Exception):
     """Base exception for AI Service"""
