@@ -108,6 +108,16 @@ for role in "${ROLES[@]}"; do
     --quiet
 done
 
+# ─── 4b. Grant Cloud Run default SA access to secrets ─────────────────────
+PROJECT_NUMBER=$(gcloud projects describe "${GCP_PROJECT_ID}" --format="value(projectNumber)")
+COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+echo ">>> Granting Secret Manager access to Cloud Run default SA: ${COMPUTE_SA}"
+gcloud projects add-iam-policy-binding "${GCP_PROJECT_ID}" \
+  --member="serviceAccount:${COMPUTE_SA}" \
+  --role="roles/secretmanager.secretAccessor" \
+  --quiet
+
 # ─── 5. Workload Identity Federation ────────────────────────────────────────
 echo ">>> Setting up Workload Identity Federation..."
 

@@ -1,0 +1,1 @@
+"""Korean Study API endpoints"""

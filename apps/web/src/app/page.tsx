@@ -12,6 +12,8 @@ const KlaimPricingTable = dynamic(
   () => import("@/components/klaim-pricing-table"),
   { ssr: false }
 );
+import { ArticleList } from "@/components/study/article-list";
+import { sampleArticles } from "@/data/articles";
 import {
   Zap,
   Languages,
@@ -23,6 +25,7 @@ import {
   ChevronRight,
   Link as LinkIcon,
   CheckCircle,
+  GraduationCap,
 } from "lucide-react";
 
 const TOTAL_SLIDES = 3;
@@ -482,6 +485,27 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* Korean Study 섹션 */}
+      <section
+        id="korean-study"
+        className="min-h-screen flex items-center px-4 md:px-6 py-12"
+      >
+        <div className="max-w-4xl mx-auto w-full space-y-8 md:space-y-12">
+          <div className="text-center space-y-2 md:space-y-3">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <GraduationCap className="w-6 h-6 text-accent" />
+            </div>
+            <h2 className="text-xl md:text-3xl font-bold">
+              한국어 학습 텍스트
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground">
+              원문을 읽고, Study Mode로 라인별 번역과 표현을 학습하세요
+            </p>
+          </div>
+          <ArticleList articles={sampleArticles} />
+        </div>
+      </section>
 
       {/* Pricing 섹션 */}
       <section
