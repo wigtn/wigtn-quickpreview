@@ -1,6 +1,6 @@
 """Data models"""
 
-from .schemas import (
+from .video_schemas import (
     VideoMetadata,
     STTSegment,
     Highlight,

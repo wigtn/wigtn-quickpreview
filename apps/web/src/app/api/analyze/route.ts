@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { extractVideoId } from "@/lib/youtube";
-import { fetchVideoMetadata } from "@/lib/services/youtube-metadata";
-import { fetchTranscript, TranscriptError } from "@/lib/services/transcript";
-import { analyzeWithAI } from "@/lib/services/ai-analysis";
-import { translateSegments, needsTranslation, TranslationError } from "@/lib/services/translation";
-import { createLogger } from "@/lib/logger";
-import { TranscriptSegment } from "@/types/analysis";
-import { ERROR_CODES } from "@/lib/errors/error-codes";
+import { extractVideoId } from "@/features/video/lib/youtube";
+import { fetchVideoMetadata } from "@/features/video/services/youtube-metadata";
+import { fetchTranscript, TranscriptError } from "@/features/video/services/transcript";
+import { analyzeWithAI } from "@/features/video/services/ai-analysis";
+import { translateSegments, needsTranslation, TranslationError } from "@/features/video/services/translation";
+import { createLogger } from "@/shared/lib/logger";
+import { TranscriptSegment } from "@/features/video/types/analysis";
+import { ERROR_CODES } from "@/shared/lib/errors/error-codes";
 
 const logger = createLogger("AnalyzeAPI");
 

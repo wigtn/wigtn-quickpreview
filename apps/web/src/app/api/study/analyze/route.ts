@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/shared/lib/logger";
 
 const logger = createLogger("StudyAnalyzeAPI");
 

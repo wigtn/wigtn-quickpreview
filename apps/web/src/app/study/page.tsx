@@ -3,11 +3,11 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { useStudyAnalysis } from "@/hooks/use-study-analysis";
-import { ViewModeToggle, type ViewMode } from "@/components/study/view-mode-toggle";
-import { SentenceView } from "@/components/study/sentence-view";
-import { ExpressionCard } from "@/components/study/expression-card";
-import { ExpressionSummary } from "@/components/study/expression-summary";
+import { useStudyAnalysis } from "@/features/study/hooks/use-study-analysis";
+import { ViewModeToggle, type ViewMode } from "@/features/study/components/view-mode-toggle";
+import { SentenceView } from "@/features/study/components/sentence-view";
+import { ExpressionCard } from "@/features/study/components/expression-card";
+import { ExpressionSummary } from "@/features/study/components/expression-summary";
 
 function StudyContent() {
   const router = useRouter();

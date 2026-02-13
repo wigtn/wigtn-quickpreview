@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { AnalysisView } from "@/components/analysis-view";
-import { LoadingState } from "@/components/loading-state";
-import { FullPageError } from "@/components/error-display";
-import { VideoAnalysis } from "@/types/analysis";
-import { analysisStore } from "@/store/analysis-store";
-import { ApiError } from "@/lib/errors";
-import { useAnalysisStream } from "@/hooks/use-analysis-stream";
+import { AnalysisView } from "@/features/video/components/analysis-view";
+import { LoadingState } from "@/features/video/components/loading-state";
+import { FullPageError } from "@/shared/components/error-display";
+import { VideoAnalysis } from "@/features/video/types/analysis";
+import { analysisStore } from "@/features/video/store/analysis-store";
+import { ApiError } from "@/shared/lib/errors";
+import { useAnalysisStream } from "@/features/video/hooks/use-analysis-stream";
 
 export default function AnalyzePage() {
   const router = useRouter();

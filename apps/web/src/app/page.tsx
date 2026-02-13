@@ -1,7 +1,7 @@
 "use client";
 
-import { StudyInput } from "@/components/study/study-input";
-import { RecommendedLinks } from "@/components/study/recommended-links";
+import { StudyInput } from "@/features/study/components/study-input";
+import { RecommendedLinks } from "@/features/study/components/recommended-links";
 
 export default function Home() {
   return (

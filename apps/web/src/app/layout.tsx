@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers";
-import { ErrorBoundary } from "@/components/error-boundary";
-import { Sidebar } from "@/components/layout/sidebar";
-import { MobileHeader } from "@/components/layout/mobile-header";
+import { Providers } from "@/shared/components/providers";
+import { ErrorBoundary } from "@/shared/components/error-boundary";
+import { Sidebar } from "@/shared/components/layout/sidebar";
+import { MobileHeader } from "@/shared/components/layout/mobile-header";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",

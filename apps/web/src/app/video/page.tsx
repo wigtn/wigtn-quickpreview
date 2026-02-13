@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, FileText, Target, Globe } from "lucide-react";
-import { extractVideoId } from "@/lib/youtube";
+import { extractVideoId } from "@/features/video/lib/youtube";
 
 const FEATURES = [
   {
